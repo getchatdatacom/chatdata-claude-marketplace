@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.5 - 2026-06-03
+
+- added `/chatdata:help` as the setup-status and command router advertised by the portal
+- added `/chatdata:but-for-real` for the skeptical second-pass verification flow
+- shipped `packages/mcp` in the ChatData-owned marketplace repo so customer MCP setup no longer depends on a private local product checkout
+
 ## 0.3.4 - 2026-05-30
 
 - added `/chatdata:publish-patch` so pending MCP patches have a real Claude command path instead of a nonexistent instruction
