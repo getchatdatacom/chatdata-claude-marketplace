@@ -17,12 +17,15 @@ First try to use the ChatData MCP server and run `chatdata_doctor`.
 Then show the smallest command map:
 
 - Setup or repair: `/chatdata:help`, `/chatdata:status`
-- First session: `/chatdata:onboarding` if available, otherwise `/chatdata:status`
+- Update plugin and MCP: `/chatdata:update`
+- First session or new teammate: `/chatdata:onboarding`
 - Ask a metric question: `/chatdata:investigate-metric`
 - Review trusted context: `/chatdata:audit-context`
 - Save reusable context: `/chatdata:sync-context`
 - Record proof: `/chatdata:proof`
 - Final verification: `/chatdata:but-for-real`
+
+If approved context already exists in MCP, route first-session setup to `/chatdata:onboarding` so existing metrics, answer paths, source references, decisions, playbooks, evals, and proof receipts become the directional setup map. Do not ask users to repeat context the workspace already knows.
 
 If the user asks for a command that is not available in this installed plugin, do not pretend it exists. Route to the closest available command and name the missing command plainly.
 

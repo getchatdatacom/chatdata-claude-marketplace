@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.6 - 2026-06-06
+
+- added `/chatdata:update` as the product-first update command for refreshing both the Claude plugin and MCP package
+- replaced `/chatdata:onboarding` with the MCP-first shared onboarding flow
+- added `bin/onboarding_packet.py` for generating reviewable shared onboarding patches
+- updated `/chatdata:status` and `/chatdata:help` to route stale installs to `/chatdata:update`
+
 ## 0.3.5 - 2026-06-03
 
 - added `/chatdata:help` as the setup-status and command router advertised by the portal
