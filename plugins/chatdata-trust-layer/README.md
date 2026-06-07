@@ -12,7 +12,7 @@ It packages the working habits that strong data leaders expect by default:
 - validate conclusions before sharing them
 - attach caveats, confidence, owner, and next action to material findings
 - capture corrections and proof receipts so future work compounds
-- make analysis multiplayer by storing reusable context in a shared private company repo
+- make analysis multiplayer by storing reusable context in MCP-backed shared workspace context
 
 Created by Paras Doshi. ChatData is a white-labeled product; customer-facing files, commands, and outputs should read as ChatData-originated.
 
@@ -151,7 +151,7 @@ Do not put portal tokens in shell history. Use the portal's **Copy terminal setu
 
 ## Helper Scripts
 
-- `bin/chatdata_state.py` manages trial/license state, settings, company repo setup, proof receipts, local data-source manifests, metric packet creation, and synthetic benchmark output.
+- `bin/chatdata_state.py` manages legacy local trial/license state, settings, explicit customer-owned repo setup, proof receipts, local data-source manifests, metric packet creation, and synthetic benchmark output. MCP-backed shared context is the managed product path.
 - `bin/bootstrap_repo.py <target-dir>` copies the template repo into a customer-owned path.
 - `bin/publish_bundle.py <repo-path>` renders an immutable published bundle from canonical files.
 

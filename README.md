@@ -23,4 +23,4 @@ codex plugin marketplace add getchatdatacom/chatdata-claude-marketplace
 codex plugin add chatdata-codex@chatdata
 ```
 
-ChatData helps data professionals operate like principal data professionals with trusted metrics, validation, proof receipts, and a shared private company context repo.
+ChatData helps data professionals operate like principal data professionals with trusted metrics, validation, proof receipts, and MCP-backed shared workspace context.

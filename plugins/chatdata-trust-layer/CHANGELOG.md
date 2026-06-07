@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.8 - 2026-06-06
+
+- updated the Claude Code status line to prefer MCP activation and local Context Hub cache state over the retired company-repo setup path
+- fixed healthy MCP installs showing `repo:missing` and `setup:1/5` when no project-local `.chatdata/company-repo.json` exists
+
 ## 0.3.7 - 2026-06-06
 
 - moved public plugin and MCP install instructions to the `getchatdatacom/chatdata-claude-marketplace` distribution repo

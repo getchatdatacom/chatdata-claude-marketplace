@@ -74,6 +74,47 @@ function proofImpact(entries) {
   };
 }
 
+function domainCacheSegment(domain) {
+  return String(domain || "")
+    .split(".")[0]
+    .replace(/[^a-z0-9_-]/gi, "-")
+    .toLowerCase();
+}
+
+function countManifestFiles(manifest, prefix) {
+  const files = manifest && Array.isArray(manifest.files) ? manifest.files : [];
+  return files.filter((file) => file && typeof file.path === "string" && file.path.startsWith(prefix)).length;
+}
+
+function mcpContextInfo(home) {
+  const config = readJson(path.join(home, "config.json"), {});
+  const domain = config && config.domain ? String(config.domain) : "";
+  if (!domain) {
+    return {
+      configured: false,
+      domain: "",
+      contextDir: "",
+      manifest: {},
+      cachedCount: 0,
+      metricCount: 0,
+      proofCount: 0,
+    };
+  }
+
+  const contextDir = path.join(home, "context", domainCacheSegment(domain));
+  const manifest = readJson(path.join(contextDir, "manifest.json"), {});
+  const cachedCount = Number(manifest.cached_count || 0);
+  return {
+    configured: true,
+    domain,
+    contextDir,
+    manifest,
+    cachedCount: Number.isFinite(cachedCount) ? cachedCount : 0,
+    metricCount: countManifestFiles(manifest, "metrics/"),
+    proofCount: countManifestFiles(manifest, "proof/"),
+  };
+}
+
 function walkUpForProjectState(startDir) {
   let current = path.resolve(startDir || process.cwd());
   while (true) {
@@ -123,6 +164,7 @@ function main() {
   const home = path.join(os.homedir(), ".chatdata");
   const projectState = walkUpForProjectState(process.cwd());
   const license = readJson(path.join(home, "license.json"), {});
+  const mcpContext = mcpContextInfo(home);
   const companyRepo = readJson(path.join(projectState, "company-repo.json"), {});
   const onboarding = readJson(path.join(projectState, "onboarding.json"), {});
   const repoPath = companyRepo && companyRepo.path ? String(companyRepo.path) : "";
@@ -130,15 +172,29 @@ function main() {
     ? path.join(repoPath, "proof", "impact-log.jsonl")
     : path.join(projectState, "impact-log.jsonl");
   const impact = proofImpact(readJsonl(proofPath));
-  const repoState = repoPath ? "repo:on" : "repo:missing";
-  const syncState = companyRepo && companyRepo.last_sync_status === "synced" ? "sync:on" : "sync:check";
+  const contextState = mcpContext.configured
+    ? `mcp:${mcpContext.domain}`
+    : repoPath
+      ? "repo:on"
+      : "mcp:missing";
+  const syncState = mcpContext.configured
+    ? mcpContext.cachedCount > 0
+      ? `context:${mcpContext.cachedCount}`
+      : "context:empty"
+    : companyRepo && companyRepo.last_sync_status === "synced"
+      ? "sync:on"
+      : "sync:check";
   const onboardingState =
+    mcpContext.configured
+      ? "setup:mcp"
+      :
     onboarding && onboarding.complete
       ? "onboarded"
       : onboarding && onboarding.total
         ? `setup:${onboarding.completed || 0}/${onboarding.total}`
         : "setup";
-  const metricTotal = metricCount(repoPath, projectState);
+  const metricTotal = Math.max(mcpContext.metricCount, metricCount(repoPath, projectState));
+  const proofTotal = Math.max(mcpContext.proofCount, countLines(proofPath));
 
   if (impact.loops > 0) {
     const valueLabel = `${formatUsd(impact.value)}${impact.valueIsEstimated ? " est" : ""}`;
@@ -154,8 +210,8 @@ function main() {
 
   console.log(
     `${color("CHATDATA", "1;32")} stops AI analytics slop` +
-      ` | ${repoState} | ${syncState} | metrics:${metricTotal}` +
-      ` | proof:${countLines(proofPath)} | ${onboardingState} | trial:${daysRemaining(license)}`,
+      ` | ${contextState} | ${syncState} | metrics:${metricTotal}` +
+      ` | proof:${proofTotal} | ${onboardingState} | trial:${daysRemaining(license)}`,
   );
 }
 
