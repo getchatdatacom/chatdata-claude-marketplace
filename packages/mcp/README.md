@@ -21,7 +21,7 @@ For customer setup, the direct build path uses the ChatData-owned marketplace di
 
 ```bash
 CHATDATA_INSTALL_REPO_DIR="${CHATDATA_INSTALL_REPO_DIR:-$HOME/.chatdata/chatdata-claude-marketplace}"
-CHATDATA_INSTALL_REPO_URL="${CHATDATA_INSTALL_REPO_URL:-https://github.com/getchatdata/chatdata-claude-marketplace.git}"
+CHATDATA_INSTALL_REPO_URL="${CHATDATA_INSTALL_REPO_URL:-https://github.com/getchatdatacom/chatdata-claude-marketplace.git}"
 if [ -d "$CHATDATA_INSTALL_REPO_DIR/.git" ]; then
   git -C "$CHATDATA_INSTALL_REPO_DIR" pull --ff-only
 elif [ -e "$CHATDATA_INSTALL_REPO_DIR" ]; then

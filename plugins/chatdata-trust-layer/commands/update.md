@@ -23,7 +23,7 @@ claude plugin marketplace update chatdata
 If the marketplace name is not recognized, run the explicit marketplace add command, then retry the update:
 
 ```bash
-claude plugin marketplace add https://github.com/getchatdata/chatdata-claude-marketplace.git
+claude plugin marketplace add https://github.com/getchatdatacom/chatdata-claude-marketplace.git
 claude plugin marketplace update chatdata
 ```
 
@@ -45,7 +45,7 @@ claude plugin update chatdata@chatdata
 
 ```bash
 CHATDATA_INSTALL_REPO_DIR="${CHATDATA_INSTALL_REPO_DIR:-$HOME/.chatdata/chatdata-claude-marketplace}"
-CHATDATA_INSTALL_REPO_URL="${CHATDATA_INSTALL_REPO_URL:-https://github.com/getchatdata/chatdata-claude-marketplace.git}"
+CHATDATA_INSTALL_REPO_URL="${CHATDATA_INSTALL_REPO_URL:-https://github.com/getchatdatacom/chatdata-claude-marketplace.git}"
 if [ -d "$CHATDATA_INSTALL_REPO_DIR/.git" ]; then
   git -C "$CHATDATA_INSTALL_REPO_DIR" pull --ff-only
 elif [ -e "$CHATDATA_INSTALL_REPO_DIR" ]; then
@@ -95,7 +95,7 @@ If `/reload-plugins` is unavailable in their client, tell them to close and reop
 If the installed ChatData plugin is too old to have `/chatdata:update`, send this exact fallback:
 
 ```bash
-claude plugin marketplace add https://github.com/getchatdata/chatdata-claude-marketplace.git
+claude plugin marketplace add https://github.com/getchatdatacom/chatdata-claude-marketplace.git
 claude plugin marketplace update chatdata
 claude plugin update chatdata@chatdata
 CHATDATA_INSTALL_REPO_DIR="${CHATDATA_INSTALL_REPO_DIR:-$HOME/.chatdata/chatdata-claude-marketplace}"

@@ -2,12 +2,15 @@
 
 Public marketplace repository for ChatData agent plugins.
 
+This repository is public only for installation. It is not open source. See
+[`LICENSE`](./LICENSE) for the proprietary install/use terms.
+
 ## Claude Code
 
 Install the Claude Code plugin after adding this marketplace in Claude Code:
 
 ```text
-/plugin marketplace add getchatdata/chatdata-claude-marketplace
+/plugin marketplace add getchatdatacom/chatdata-claude-marketplace
 /plugin install chatdata@chatdata
 ```
 
@@ -16,7 +19,7 @@ Install the Claude Code plugin after adding this marketplace in Claude Code:
 Install the Codex plugin from the same public Git marketplace:
 
 ```bash
-codex plugin marketplace add getchatdata/chatdata-claude-marketplace
+codex plugin marketplace add getchatdatacom/chatdata-claude-marketplace
 codex plugin add chatdata-codex@chatdata
 ```
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.7 - 2026-06-06
+
+- moved public plugin and MCP install instructions to the `getchatdatacom/chatdata-claude-marketplace` distribution repo
+- replaced the old MIT license text with the ChatData proprietary install/use license
+- marked the MCP package metadata as `UNLICENSED`
+
 ## 0.3.6 - 2026-06-06
 
 - added `/chatdata:update` as the product-first update command for refreshing both the Claude plugin and MCP package

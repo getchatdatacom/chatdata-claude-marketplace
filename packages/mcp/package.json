@@ -4,6 +4,7 @@
   "description": "MCP server for ChatData Context Hub activation, token status, and workspace consent.",
   "type": "module",
   "private": true,
+  "license": "UNLICENSED",
   "bin": {
     "chatdata-mcp": "dist/index.js"
   },
