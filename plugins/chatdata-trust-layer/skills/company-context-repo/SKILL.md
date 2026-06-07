@@ -1,34 +1,28 @@
 ---
 name: company-context-repo
-description: Enforce ChatData's shared private company context repo for team or company analytics work.
+description: Enforce ChatData's MCP-backed shared workspace context for team or company analytics work.
 ---
 
-# Company Context Repo
+# Company Context
 
 Use this skill whenever the user mentions a company, team rollout, shared data context, GitHub repo, catalog, Slack rollout, WBR, recurring metrics, or work that multiple people will reuse.
 
-ChatData's default stance: serious data analysis should not stay single-player. Company work needs a shared private context repo, usually named `ChatData-<Company>`, that everyone on the company analytics workflow can read and improve.
+ChatData's default stance: serious data analysis should not stay single-player. Company work needs MCP-backed shared workspace context that everyone on the company analytics workflow can read and improve.
 
 ## Enforcement
 
 Before company or team analysis:
 
-1. Run the trial/license guard.
-2. Run the company repo check:
+1. Run `chatdata_doctor`.
+2. Pull approved context with `chatdata_pull_context`.
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" company-repo --require
-```
+If MCP is configured and context is available, continue without ceremony.
 
-If the repo is configured, continue without ceremony.
-
-If the repo is missing, stop the analysis and run `/chatdata:company-repo` setup. For managed onboarding, ChatData creates the private GitHub repo and grants the customer's GitHub users or team access. For self-serve onboarding, the customer can create it in their GitHub org and provide the owner, repo, local path, and remote.
-
-Do not create a private GitHub repo, push code, invite users, or change access without explicit approval and working GitHub auth.
+If MCP is missing or points at the wrong workspace, stop the analysis and send the user to ChatData Settings for the terminal setup command. A customer-owned GitHub repo can still be used only as an explicit fallback or debug surface.
 
 ## Read Before Work
 
-Before raw discovery, inspect the company repo:
+Before raw discovery, inspect MCP context:
 
 - `metrics/`
 - `answer-paths/`
@@ -42,7 +36,7 @@ Use this shared context ahead of private chat history, one-off notebooks, or gue
 
 ## Write Back
 
-After useful work, propose updates to the shared repo:
+After useful work, propose updates to shared context:
 
 - metric packet for a new or corrected metric
 - answer path for a recurring question
@@ -51,18 +45,16 @@ After useful work, propose updates to the shared repo:
 - decision note for WBR or executive-review output
 - eval case for a question that should not regress
 
-Prefer a visible diff or pull request for changes that affect other users. Do not silently overwrite reviewed context.
+Prefer a visible pending patch for changes that affect other users. Do not silently overwrite reviewed context.
 
 ## Sync After Work
 
-After every useful analysis or reusable context write, run sync as its own step:
+After every useful analysis or reusable context write, refresh context as its own step:
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" github
-```
+Use `chatdata_pull_context` to read the latest approved state and the smallest relevant write tool to save reusable context.
 
-Treat `Context sync: synced` as the successful end state. If sync is blocked, report the exact blocker before presenting the work as team-ready.
+Treat a healthy MCP write or pending patch as the successful end state. If sync is blocked, report the exact blocker before presenting the work as team-ready.
 
 ## Output Rule
 
-Tell the user where reusable context was read from, what was written back, and whether context sync succeeded. Keep customer-facing output ChatData-branded.
+Tell the user where reusable context was read from, what was written back, and whether MCP sync succeeded. Keep customer-facing output ChatData-branded.

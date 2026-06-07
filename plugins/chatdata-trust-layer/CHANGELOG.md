@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.9 - 2026-06-06
+
+- cleaned stale company-repo skill wording so MCP-backed shared workspace context is the managed default
+
 ## 0.3.8 - 2026-06-06
 
 - updated the Claude Code status line to prefer MCP activation and local Context Hub cache state over the retired company-repo setup path
