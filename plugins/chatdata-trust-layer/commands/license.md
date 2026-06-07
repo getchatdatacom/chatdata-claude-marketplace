@@ -1,23 +1,11 @@
 ---
-description: ChatData command for ChatData License.
+description: Check ChatData trial, license, plan, and account status.
 ---
 
-# ChatData License
+# License
 
-Use this command to activate a manual ChatData license key after the 7-day trial.
+Use this command when the user asks about trial, plan, license, billing, or account state.
 
-If the user provides a license key, run:
+Run `chatdata_doctor` and report only the account status fields the tool returns. Do not invent plan terms. If billing or account changes are needed, send the user to ChatData Settings.
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" license --key "$ARGUMENTS"
-```
-
-If no key is provided, explain that v1 uses manual license keys and that value commands stop after the 7-day trial until a key is activated.
-
-For internal support only, a key can be issued with:
-
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" license --issue --email person@company.com --expires 2026-12-31
-```
-
-Do not present this as a hardened billing system. It is the v1 trial gate until Stripe is added.
+End with `/chatdata:trial-and-privacy` if the user asks about data boundaries.

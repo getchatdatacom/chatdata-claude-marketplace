@@ -6,7 +6,7 @@ description: Show ChatData setup status, command map, and the next useful comman
 
 Use this command when the user is new, unsure which ChatData command to run, or blocked by setup.
 
-Keep the answer compact. This is the command router, not the full manual.
+Keep the answer compact, but do not hide the breadth of the plugin. This is the command router and feature map.
 
 First try to use the ChatData MCP server and run `chatdata_doctor`.
 
@@ -14,16 +14,16 @@ First try to use the ChatData MCP server and run `chatdata_doctor`.
 - If `chatdata_doctor` reports a config, consent, token, workspace, or hub error, show the failing check and the next repair action.
 - If healthy, report the workspace domain and say MCP is connected.
 
-Then show the smallest command map:
+Then show the command map:
 
-- Setup or repair: `/chatdata:help`, `/chatdata:status`
-- Update plugin and MCP: `/chatdata:update`
-- First session or new teammate: `/chatdata:onboarding`
-- Ask a metric question: `/chatdata:investigate-metric`
-- Review trusted context: `/chatdata:audit-context`
-- Save reusable context: `/chatdata:sync-context`
-- Record proof: `/chatdata:proof`
-- Final verification: `/chatdata:but-for-real`
+- Start and setup: `/chatdata:start`, `/chatdata:login`, `/chatdata:status`, `/chatdata:update`, `/chatdata:onboarding`, `/chatdata:settings`
+- Catalog and context: `/chatdata:catalog`, `/chatdata:metrics`, `/chatdata:sync-context`, `/chatdata:audit-context`, `/chatdata:publish-patch`
+- Data connection: `/chatdata:connect-data`, `/chatdata:scan-sources`, `/chatdata:context-bootstrap`, `/chatdata:company-repo`
+- Analysis: `/chatdata:question-framing`, `/chatdata:investigate`, `/chatdata:investigate-metric`, `/chatdata:prepare-wbr`, `/chatdata:write-operating-brief`, `/chatdata:story-and-action`
+- Trust and validation: `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:benchmark`, `/chatdata:build-benchmark`, `/chatdata:but-for-real`
+- Memory and proof: `/chatdata:proof`, `/chatdata:proof-receipts`, `/chatdata:feedback-memory`, `/chatdata:drift-check`, `/chatdata:review-readiness`
+- Build and publish: `/chatdata:bootstrap-repo`, `/chatdata:draft-metric-packet`, `/chatdata:generate-evals`, `/chatdata:create-evals`, `/chatdata:publish-slack-context`
+- Account: `/chatdata:license`, `/chatdata:trial-and-privacy`, `/chatdata:activate-session`
 
 If approved context already exists in MCP, route first-session setup to `/chatdata:onboarding` so existing metrics, answer paths, source references, decisions, playbooks, evals, and proof receipts become the directional setup map. Do not ask users to repeat context the workspace already knows.
 
@@ -34,6 +34,6 @@ Required output:
 - one-line ChatData purpose
 - MCP status
 - workspace/domain if available
-- 5-7 command choices grouped by job
+- command choices grouped by job
 - the single next command to run
 - support route: `support@getchatdata.com`

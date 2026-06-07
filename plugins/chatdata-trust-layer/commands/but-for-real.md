@@ -1,3 +1,7 @@
+---
+description: Run a skeptical proof pass before calling ChatData work ready or trusted.
+---
+
 # But For Real
 
 Use this command after ChatData drafts, edits, publishes, or claims a trust-layer result is ready.

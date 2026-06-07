@@ -20,6 +20,8 @@ Then use the ChatData MCP server and run `chatdata_list_review_queue`.
 
 After explicit approval for a specific patch id, use the ChatData MCP server and run `chatdata_publish_patch` with that `patch_id`.
 
+After publishing, run `chatdata_pull_context` and verify the published path appears in approved context. If the patch creates a canonical metric or answer path, recommend `/chatdata:audit-context` for the affected workflow.
+
 Required output:
 
 - MCP doctor status

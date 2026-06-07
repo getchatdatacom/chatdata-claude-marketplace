@@ -1,49 +1,24 @@
 ---
-description: Connect your token, attach the private company repo, and start shared context sync.
+description: Connect your ChatData token and verify the workspace MCP config.
 ---
 
 # Login
 
-Use this once per user or machine to connect Claude Code to the ChatData portal.
+Use this command when ChatData needs a workspace token, MCP config, or domain check.
 
-Preferred secure form when the user is running the command themselves:
+Do not ask the user to paste token JSON into Terminal. Send them to ChatData Settings and have them copy the full one-shot Claude setup prompt or the terminal setup command.
 
-```bash
-read -r -s CHATDATA_TOKEN
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" login \
-  --email "<user@company.com>" \
-  --token-env CHATDATA_TOKEN
-unset CHATDATA_TOKEN
-```
+## Sequence
 
-When Claude Code is executing for the user, do not ask the user to paste the token into the transcript. Ask them to copy the token to the local clipboard, then run:
+1. Try `chatdata_doctor`.
+2. If the config is valid, report the connected domain and route to `/chatdata:status`.
+3. If the token or config is missing or invalid, say:
+   "Open https://getchatdata.com/app/settings, click Copy prompt, paste the whole prompt here, and let Claude run it. Do not paste raw JSON lines."
+4. If the user provides a setup command, run it quietly. Do not print, summarize, or expose the token.
+5. Re-run `chatdata_doctor`, then recommend `/chatdata:onboarding` and `/chatdata:start`.
 
-```bash
-CHATDATA_TOKEN="$(pbpaste)" \
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" login \
-  --email "<user@company.com>" \
-  --token-env CHATDATA_TOKEN
-```
+Required output:
 
-Non-interactive form, only when the token is already in a safe environment variable:
-
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" login \
-  --email "<user@company.com>" \
-  --token-env CHATDATA_TOKEN
-```
-
-Avoid putting the token directly in the command line, plan text, shell history, screenshots, or transcripts.
-
-After this succeeds, ChatData stores the email, token, company domain, and company repo manifest locally. Future sessions should not ask for GitHub setup again unless the portal config changes or the local state is deleted.
-
-Default behavior:
-
-- derive company key from the work email domain
-- fetch repo config from `https://getchatdata.com/api/portal/config`
-- create or attach the local company repo scaffold
-- write `.chatdata/company-repo.json`
-- write `~/.chatdata/company-domain-map.json`
-- use backend-managed sync for ChatData-managed repos, so local GitHub credentials are not required
-
-Do not ask for company name. The domain is the company key.
+- connected domain or blocker
+- MCP status
+- next command

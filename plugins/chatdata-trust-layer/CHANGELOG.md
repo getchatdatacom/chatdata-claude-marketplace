@@ -1,73 +1,26 @@
 # Changelog
 
-## 0.3.9 - 2026-06-06
+## Unreleased
 
+- restored `/chatdata:start`, `/chatdata:login`, and a broader picker-visible command catalog for customer onboarding
+- added a `/chatdata:catalog` guide for using the AI-native data catalog, review queue, metrics, evidence, and sync workflows
+- added customer-friendly command aliases for metrics, investigation, validation, benchmarks, evals, proof receipts, settings, trial/privacy, source connection, and context bootstrap
+- added picker descriptions to every core command so typing `/chatdata` shows a useful feature map
+- bumped the plugin manifest to `0.3.10` so Claude Code can detect the expanded command catalog
 - cleaned stale company-repo skill wording so MCP-backed shared workspace context is the managed default
-
-## 0.3.8 - 2026-06-06
-
 - updated the Claude Code status line to prefer MCP activation and local Context Hub cache state over the retired company-repo setup path
 - fixed healthy MCP installs showing `repo:missing` and `setup:1/5` when no project-local `.chatdata/company-repo.json` exists
-
-## 0.3.7 - 2026-06-06
-
+- bumped the plugin manifest to `0.3.9` so Claude Code can detect the marketplace update from the existing `0.3.7` distribution cache
 - moved public plugin and MCP install instructions to the `getchatdatacom/chatdata-claude-marketplace` distribution repo
-- replaced the old MIT license text with the ChatData proprietary install/use license
+- replaced the public marketplace MIT license with the ChatData proprietary install/use license
 - marked the MCP package metadata as `UNLICENSED`
-
-## 0.3.6 - 2026-06-06
-
-- added `/chatdata:update` as the product-first update command for refreshing both the Claude plugin and MCP package
-- replaced `/chatdata:onboarding` with the MCP-first shared onboarding flow
-- added `bin/onboarding_packet.py` for generating reviewable shared onboarding patches
-- updated `/chatdata:status` and `/chatdata:help` to route stale installs to `/chatdata:update`
-
-## 0.3.5 - 2026-06-03
-
-- added `/chatdata:help` as the setup-status and command router advertised by the portal
-- added `/chatdata:but-for-real` for the skeptical second-pass verification flow
-- shipped `packages/mcp` in the ChatData-owned marketplace repo so customer MCP setup no longer depends on a private local product checkout
-
-## 0.3.4 - 2026-05-30
-
-- added `/chatdata:publish-patch` so pending MCP patches have a real Claude command path instead of a nonexistent instruction
-- taught the command to list pending patches through `chatdata_list_review_queue`, require an explicit patch id, and publish with `chatdata_publish_patch`
-
-## 0.3.3 - 2026-05-30
-
-- made ChatData for Claude Code a plugin-plus-MCP install: the plugin owns workflow enforcement, while the MCP owns shared context transport, status, and workspace-backed reads/writes
-- updated `/chatdata:sync-context` to require `chatdata_doctor`, pull hub context through `chatdata_pull_context`, and write reusable artifacts through MCP tools before falling back to local-only state
-- updated `/chatdata:audit-context` to audit the MCP context view first, including pull/export/conflict checks, and block company workflows when the MCP is missing
-- updated the default principal agent to require MCP-backed sync after useful analysis, validation, WBR prep, proof, corrections, metric packets, answer paths, decisions, or eval writes
-
-## 0.3.2 - 2026-05-27
-
-- switched ChatData-managed company repo sync to the ChatData backend so Claude Code users do not need local GitHub write access
-- added secure login token input through environment variables or stdin to keep portal tokens out of command history and plan text
-- updated Claude marketplace metadata for getchatdata-owned distribution
-
-## 0.3.1
-
-- added `/chatdata:activate-session` and a ChatData statusline so project-local Claude Code sessions can show `chatdata:code` instead of a globally configured agent
-- made the statusline lead with the product outcome: AI analytics slop loops blocked, saved time, estimated cost avoided, trusted metric count, sync state, and trial status
-- added `chatdata:code` as the cleaner default visible agent id while keeping the older principal workflow files available
-
-## 0.3.0 - 2026-05-26
-
-- made the private company context repo a first-class ChatData primitive
-- added `/chatdata:company-repo`, `/chatdata:sync-context`, `/chatdata:audit-context`, and `/chatdata:create-evals`
-- added domain mapping so later users from the same email domain attach to the existing company repo
-- required company repo setup for company investigation and validation workflows
-- wrote metric packets and proof receipts to the shared company repo when configured
-- added GitHub readiness checks without storing GitHub private keys in the plugin
-
-## 0.2.0 - 2026-05-25
-
-- repositioned ChatData for Claude Code around the B2C principal data professional workflow
-- added 7-day local trial state, manual license activation, settings, proof receipts, status, benchmark, data-source, and metric-packet helpers
-- added plugin-native skills for framing, trust packets, routing, data-quality preflight, SQL loops, parallel investigation, validation, action follow-through, feedback memory, proof receipts, and privacy/trial behavior
-- added `chatdata:principal` as the default agent and kept `principal-analyst` as a legacy alias
-- gated value commands behind trial/license state while keeping status, license, and proof export available
+- added `/chatdata:update` as the Wozcode-style update command for refreshing both the Claude plugin and MCP package
+- added `/chatdata:onboarding` as a shared MCP-first onboarding flow that uses existing workspace context directionally and writes reusable setup artifacts back for every plugin and Slack user
+- added `bin/onboarding_packet.py` to turn a local trust-layer repo into reviewable shared onboarding patches
+- added `/chatdata:help` as the compact command router for setup status, command choice, and support routing
+- added `/chatdata:but-for-real` and a matching skeptical verification agent for second-pass proof before declaring trust-layer work ready
+- wired the second-pass standard into metric investigation, benchmark building, review-readiness, and Slack bundle publish flows
+- declared the plugin Python helper dependency for Slack bundle publishing
 
 ## 0.1.0 - 2026-04-14
 

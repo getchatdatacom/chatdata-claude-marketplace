@@ -78,6 +78,7 @@ Review the returned patches, then propose them with `chatdata_propose_patch`. Th
    - report what new shared artifact or pending patch was created
    - report what remains local-only, if anything
    - recommend `/chatdata:audit-context` or `/chatdata:proof` before calling the onboarding result trusted
+   - show `/chatdata:start` as the command catalog so the user sees the full plugin surface after onboarding
 
 ## Required Output
 
@@ -87,6 +88,6 @@ Review the returned patches, then propose them with `chatdata_propose_patch`. Th
 - pending-review risk
 - one missing input or decision needed now
 - shared artifact created or pending patch proposed
-- next command: `/chatdata:audit-context`, `/chatdata:proof`, `/chatdata:sync-context`, or `/chatdata:publish-patch`
+- next command: `/chatdata:start`, `/chatdata:audit-context`, `/chatdata:proof`, `/chatdata:sync-context`, or `/chatdata:publish-patch`
 
 Do not end by saying the user is "set up" when useful onboarding knowledge is still only in the chat transcript or a local file. Shared setup is complete only when the reusable context is saved, proposed for review, or explicitly marked blocked.

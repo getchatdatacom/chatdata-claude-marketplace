@@ -1,13 +1,13 @@
 {
   "name": "chatdata",
-  "version": "0.3.9",
-  "description": "ChatData for Claude Code: operate like a principal data professional with MCP-backed shared context, trusted analytics workflows, validation, proof receipts, and trial gating.",
+  "version": "0.3.10",
+  "description": "ChatData for Claude Code: principal analyst workflows plus trust-layer publishing for Slack.",
   "author": {
-    "name": "Paras Doshi",
+    "name": "ParasClaw",
     "url": "https://getchatdata.com"
   },
   "homepage": "https://getchatdata.com",
   "repository": "https://getchatdata.com",
   "license": "Proprietary",
-  "keywords": ["chatdata", "analytics", "data", "trust-layer", "metric-store", "wbr", "principal-workflow", "claude-code"]
+  "keywords": ["chatdata", "analytics", "slack", "trust-layer", "dbt", "wbr", "principal-analyst"]
 }

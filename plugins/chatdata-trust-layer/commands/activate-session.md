@@ -1,29 +1,22 @@
 ---
-description: Make ChatData own this Claude Code workspace footer, agent metadata, and attribution.
+description: Activate a Claude session by checking MCP, pulling context, and choosing the next workflow.
 ---
 
 # Activate Session
 
-Use this when Claude Code has loaded ChatData commands but the footer or metadata still shows another global agent.
+Use this at the start of a new Claude Code session.
 
 Run:
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" activate-session
-```
+1. `chatdata_doctor`
+2. `chatdata_pull_context`
+3. `chatdata_list_review_queue`
 
-Default behavior:
+Then report:
 
-- writes project-local `.claude/settings.local.json`
-- preserves existing local permissions
-- sets the session agent to `chatdata:code`
-- replaces the status line with the ChatData trial, repo, sync, metric, proof, and onboarding summary
-- sets ChatData attribution for this workspace
+- workspace domain
+- context count or blank-workspace state
+- pending review risk
+- best next command
 
-This is project scoped. It does not edit the user's global `~/.claude/settings.json`.
-
-After it succeeds, restart Claude Code from the same workspace:
-
-```bash
-claude --plugin-dir "${CLAUDE_PLUGIN_ROOT}"
-```
+Route blank workspaces to `/chatdata:onboarding`; healthy recurring-analysis sessions to `/chatdata:start`, `/chatdata:investigate-metric`, or `/chatdata:prepare-wbr`.

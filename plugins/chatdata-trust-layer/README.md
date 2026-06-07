@@ -1,171 +1,239 @@
 # ChatData For Claude Code
 
-ChatData for Claude Code helps data professionals operate like principal data professionals inside Claude Code.
+ChatData for Claude Code is the plugin-first wedge for ChatData.
 
-This package is the Claude Code workflow adapter for the shared ChatData trust layer. The ChatData MCP server is the context transport and workspace API. Customers should install both: the plugin gives Claude Code the reliable analytics workflow, and the MCP keeps shared context, proof, metric packets, answer paths, and review state in sync with ChatData.
+It supports two modes with the same core:
 
-It packages the working habits that strong data leaders expect by default:
+1. `Principal analyst mode`
+   An individual founder, operator, PM, or data lead uses Claude Code as an independent chief data officer to investigate metrics, prep a weekly business review, and write operating briefs from trusted artifacts.
+2. `Builder mode`
+   An analytics engineer or data owner uses the same plugin to bootstrap the trust-layer repo, draft metric packets, publish immutable Slack bundles, and keep reviewed answer paths visible instead of burying them in chat transcripts.
 
-- clarify the decision before analysis
-- use governed metric definitions and trusted source paths first
-- check data quality before presenting numbers
-- validate conclusions before sharing them
-- attach caveats, confidence, owner, and next action to material findings
-- capture corrections and proof receipts so future work compounds
-- make analysis multiplayer by storing reusable context in MCP-backed shared workspace context
+This is one product, not two disconnected plugins. The plugin is the wedge. Slack is the organizational expansion surface.
 
-Created by Paras Doshi. ChatData is a white-labeled product; customer-facing files, commands, and outputs should read as ChatData-originated.
+## Why This Should Be A Plugin
 
-## Trial And Pricing
+This is worth being a plugin because it can:
 
-- 7-day free trial
-- `$49/month` after the trial
-- no Stripe checkout in v1
-- manual license activation with `/chatdata:license`
-- expired trials block value commands but still allow `/chatdata:status`, `/chatdata:license`, and `/chatdata:proof`
+- deliver value to one operator before an admin-heavy workspace rollout exists
+- package builder workflows like bootstrap, scan, draft, publish, and drift checks into installable commands
+- use cross-session state, stronger retrieval, and batching for exploratory or file-heavy work
+- hand Slack a stronger reviewed trust layer instead of making Slack do first-time setup
 
-Local state lives in:
+The discipline is important: keep metric packets, reviewed answer paths, and evals readable and customer-owned. The plugin is the leverage layer, not the only copy of business logic.
 
-- `~/.chatdata/license.json`
-- `~/.chatdata/profile.json`
-- `~/.chatdata/settings.json`
-- project `.chatdata/metrics/*.yaml`
-- project `.chatdata/impact-log.jsonl`
-- project `.chatdata/corrections/*.yaml`
-- project `.chatdata/company-repo.json`
+When a customer or internal stack already has a strong metadata substrate, such as Data Hub, the plugin should use that layer for catalog, lineage, ownership, and discovery context instead of recreating those primitives locally.
 
-## Plugin Plus MCP Contract
+## Always-On MCP Loop
 
-ChatData uses two harnesses together:
+Every principal or builder workflow must use the shared ChatData MCP state. The plugin should not let useful analysis live only in a chat transcript.
 
-1. `ChatData for Claude Code` plugin
-   - enforces the principal workflow
-   - routes vague questions
-   - requires proof, caveats, validation, and follow-up state
-   - runs `/chatdata:sync-context` after useful analysis or reusable context writes
-   - stops and guides setup when the MCP is missing
-2. `ChatData MCP`
-   - verifies workspace auth and consent with `chatdata_doctor`
-   - pulls approved shared context with `chatdata_pull_context`
-   - writes reusable artifacts with `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or `chatdata_propose_patch`
-   - exposes conflict, member, diff, rollback, and export tools for shared trust-layer operations
+Default loop:
 
-The plugin should not treat local GitHub sync as the primary path for company context. Local files and Git are useful for transparency and debugging, but MCP-backed context is the product path.
+1. Run `chatdata_doctor` before stakeholder-facing analysis, sync, proof, review, or publish work.
+2. Run `chatdata_pull_context` before answering so the session uses the latest approved context and local cache.
+3. Use `chatdata_search_context` or `chatdata_read_context_file` for the specific metric, source, answer path, proof receipt, or caveat. Do not dump full inventories unless the user asks.
+4. Answer with a compact trust label and the evidence that actually matters.
+5. If the work created reusable business knowledge, run the smallest write tool: `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or `chatdata_propose_patch`.
+6. Run `/chatdata:audit-context` or `/chatdata:proof` before calling the result trusted, ready, reusable, or fixed.
 
-When a command needs shared context, first use the ChatData MCP server and run `chatdata_doctor`. If the tool is unavailable or unhealthy, stop company/stakeholder workflow and guide the user to install or repair the MCP. Local-only trial work can continue only when the user explicitly accepts that it will not update team context.
+This is how audit and sync stay coupled: audit proves the context can be trusted; sync saves new reusable context back into the hub. A successful investigation that does not sync its corrected definition, answer path, caveat, or proof receipt is incomplete.
 
-## Multiplayer Company Context
+## Shared Onboarding Loop
 
-ChatData should not leave serious data work in one person's chat history.
+Run `/chatdata:onboarding` for the first customer session or when a new teammate joins an existing workspace.
 
-For company or team use, the plugin requires MCP-backed shared context. A readable private context repo can still exist, normally named `ChatData-<Company>`, but the MCP is the authoritative sync path for managed onboarding. ChatData can create or maintain the private context world during managed onboarding. Self-serve teams can still attach a customer-owned repo when that deployment mode is explicitly approved.
+Onboarding is multiplayer by default:
 
-The repo stores the shared artifacts that make AI analysis compound:
+1. Pull approved MCP context first.
+2. Use existing metrics, answer paths, source references, decisions, playbooks, evals, and proof receipts as the directional setup map.
+3. Ask only for missing or conflicting details.
+4. Save reviewed metric cards, answer paths, proof receipts, or proposed patches through MCP.
+5. Pull again so every plugin user and Slack surface sees the same context.
 
-- `metrics/`
-- `answer-paths/`
-- `corrections/`
-- `proof/`
-- `decisions/`
-- `sources/`
-- `playbooks/`
-- `evals/`
+If context already exists, ChatData should not ask the user to repeat it. The existing shared context should make onboarding feel pre-filled and opinionated. Pending patches can guide the conversation, but they are not trusted until reviewed and published.
 
-For company work, `/chatdata:investigate` and `/chatdata:validate` require healthy ChatData MCP context before they proceed. If the MCP is connected, ChatData uses it without asking. If it is missing, ChatData stops and guides MCP setup first.
+The helper `bin/onboarding_packet.py` can turn a local trust-layer repo into reviewable shared onboarding patches:
 
-ChatData-managed context syncs through the ChatData backend, so the user's local GitHub account does not need write access to a private repo. Customer-owned and local-git modes can still use the customer's own GitHub auth when that is the approved deployment model.
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/bin/onboarding_packet.py" <trust-layer-repo> --include-markdown
+```
 
-## Default Agent
+Those patches create shared context for the onboarding packet, source inventory, scope decision, and sync playbook. Propose them with `chatdata_propose_patch` so one user's onboarding work becomes reusable workspace memory.
 
-The plugin ships `chatdata:code` as its default agent through `settings.json`.
+## Analyst Standard Encoded
 
-That agent enforces the principal workflow:
+The plugin encodes the working standard from the current `ai-analyst-lab/ai-analyst` and `parasdoshicom/ai-plus-data` references:
 
-1. route the question by complexity
-2. frame non-trivial work around decision, metric, grain, source, timeframe, edge cases, and success criteria
-3. read metric packets, answer paths, trusted SQL, corrections, and catalog context first
-4. run data-quality preflight
-5. use a self-correcting SQL loop when querying
-6. investigate bad-data or metric-movement cases in parallel
-7. validate with structural, logical, business-rule, source tie-out, and Simpson's Paradox checks
-8. return answer, implication, evidence, caveats, confidence, owner, next action, and follow-up date
-9. record proof receipts when useful work is completed
+- question framing: start with the decision, metric, grain, period, segment, and hypothesis before writing queries or summaries
+- metric trust packets: official definition, owner, grain, source, freshness, caveats, validation rules, approved answer paths, and eval questions
+- source tie-out: compare generated answers to blessed dashboard/model/query totals and stop when foundational numbers do not match
+- validation pass: rederive key numbers, check arithmetic, compare against expected ranges, inspect joins/filters, and name confidence
+- self-correcting SQL loop: state assumptions, run the query, inspect errors or surprises, revise, then validate the final answer
+- answer memory: save recurring, owner-reviewed paths so the next user gets the trusted route instead of another bespoke analysis
 
-## Commands
+Capability promise:
 
-### Trial, License, And Proof
+- A non-data operator should get principal-level scaffolding: metric framing, trusted source selection, caveat handling, and a clear next decision.
+- A data scientist should operate above their current level by getting stricter framing, tie-outs, validation prompts, and reusable answer-path capture.
+
+Do not claim those outcomes are proven for a customer until a proof receipt or eval run demonstrates them for that workspace.
+
+## Intended commands
+
+### Start here
 
 - `/chatdata:start`
-- `/chatdata:onboarding`
-- `/chatdata:activate-session`
+- `/chatdata:commands`
+- `/chatdata:help`
 - `/chatdata:login`
 - `/chatdata:status`
-- `/chatdata:impact`
-- `/chatdata:license`
+- `/chatdata:update`
+- `/chatdata:onboarding`
 - `/chatdata:settings`
-- `/chatdata:company-repo`
-- `/chatdata:sync-context`
-- `/chatdata:proof`
-- `/chatdata:benchmark`
+- `/chatdata:catalog`
 
-### Principal Workflow
+### Principal analyst mode
 
-- `/chatdata:connect-data`
-- `/chatdata:metrics`
+- `/chatdata:question-framing`
 - `/chatdata:investigate`
-- `/chatdata:validate`
-- `/chatdata:audit-context`
-- `/chatdata:create-evals`
 - `/chatdata:investigate-metric`
+- `/chatdata:impact`
 - `/chatdata:prepare-wbr`
 - `/chatdata:write-operating-brief`
+- `/chatdata:story-and-action`
+- `/chatdata:validate`
+- `/chatdata:validation-stack`
+- `/chatdata:proof`
+- `/chatdata:proof-receipts`
+- `/chatdata:but-for-real`
 
-### Trust Layer Builder Workflow
+### Builder mode
 
+- `/chatdata:metrics`
+- `/chatdata:connect-data`
+- `/chatdata:context-bootstrap`
+- `/chatdata:company-repo`
+- `/chatdata:audit-context`
+- `/chatdata:sync-context`
 - `/chatdata:bootstrap-repo`
 - `/chatdata:scan-sources`
 - `/chatdata:draft-metric-packet`
 - `/chatdata:build-benchmark`
+- `/chatdata:benchmark`
 - `/chatdata:generate-evals`
+- `/chatdata:create-evals`
 - `/chatdata:drift-check`
+- `/chatdata:feedback-memory`
 - `/chatdata:publish-patch`
 - `/chatdata:publish-slack-context`
 - `/chatdata:review-readiness`
+- `/chatdata:but-for-real`
 
-The plugin is one product surface. The personal Claude Code wedge and the future Slack/team rollout use the same trust layer.
+### Account and session
+
+- `/chatdata:license`
+- `/chatdata:trial-and-privacy`
+- `/chatdata:activate-session`
 
 ## Install
 
-Install from the approved Claude Code distribution once the listing is live. During private beta, use the invite instructions provided in the ChatData portal.
-
-The install is not complete until both checks pass:
+For local development, launch Claude Code with the plugin directory explicitly:
 
 ```bash
-claude plugin list
-claude mcp get chatdata
+CHATDATA_REPO="${CHATDATA_REPO:-$HOME/Documents/ChatData}"
+claude --plugin-dir "$CHATDATA_REPO/plugins/chatdata-trust-layer"
 ```
 
-`claude plugin list` should show `chatdata@chatdata` enabled. `claude mcp get chatdata` should show `Status: Connected`, `Command: node`, and the ChatData MCP `packages/mcp/dist/index.js` path.
+For customer setup, use the ChatData-owned Git marketplace repo:
 
-Do not put portal tokens in shell history. Use the portal's **Copy terminal setup command** or `/chatdata:login` with the secure token environment flow documented in the command.
+```bash
+claude plugin marketplace add https://github.com/getchatdatacom/chatdata-claude-marketplace.git
+claude plugin install chatdata@chatdata
+```
 
-## Helper Scripts
+The same marketplace repo also carries the customer-facing MCP package under `packages/mcp`.
 
-- `bin/chatdata_state.py` manages legacy local trial/license state, settings, explicit customer-owned repo setup, proof receipts, local data-source manifests, metric packet creation, and synthetic benchmark output. MCP-backed shared context is the managed product path.
+To prepare a customer-facing distribution bundle, run:
+
+```bash
+CHATDATA_REPO="${CHATDATA_REPO:-$HOME/Documents/ChatData}"
+"$CHATDATA_REPO/scripts/package_chatdata_products.sh" https://api.getchatdata.com
+```
+
+That script creates a plugin zip, a trust-repo template zip, and a Slack manifest under `dist/chatdata-products/`.
+
+## Update
+
+Run `/chatdata:update` inside Claude Code to update both installed ChatData pieces:
+
+1. the ChatData Claude plugin from the marketplace
+2. the ChatData MCP package under `~/.chatdata/chatdata-claude-marketplace`
+
+If the installed plugin is too old to have `/chatdata:update`, use the manual fallback:
+
+```bash
+claude plugin marketplace add https://github.com/getchatdatacom/chatdata-claude-marketplace.git
+claude plugin marketplace update chatdata
+claude plugin update chatdata@chatdata
+CHATDATA_INSTALL_REPO_DIR="${CHATDATA_INSTALL_REPO_DIR:-$HOME/.chatdata/chatdata-claude-marketplace}"
+git -C "$CHATDATA_INSTALL_REPO_DIR" pull --ff-only
+CHATDATA_MCP_DIR="${CHATDATA_MCP_DIR:-$CHATDATA_INSTALL_REPO_DIR/packages/mcp}"
+cd "$CHATDATA_MCP_DIR" && npm install && npm run build
+```
+
+Then run `/reload-plugins` or restart Claude Code, followed by `/chatdata:status`.
+
+## Product modes
+
+### Principal analyst mode
+
+Use the plugin when one person needs principal-level data science without waiting on a full team workflow.
+
+Typical outputs:
+
+- metric movement investigation
+- weekly business review prep
+- executive operating brief
+- follow-up questions and caveats worth carrying into Slack later
+- skeptical second-pass verdict before calling an answer trusted or ready
+
+### Builder mode
+
+Use the same plugin when you are creating or maintaining the trust layer that powers the Slack app.
+
+Typical outputs:
+
+- trust-layer repo scaffold
+- metric packets
+- benchmark queries
+- eval sets
+- immutable Slack bundle publish
+- drift and review-readiness checks
+- skeptical second-pass proof before a trust-layer change is marked complete
+
+## Verification Standard
+
+ChatData should not say "done", "ready", "trusted", "fixed", or "this should work" unless it has checked the files and run the smallest relevant proof.
+
+Use `/chatdata:but-for-real` after meaningful plugin, trust-layer, or Slack-bundle changes. The expected result is a short verdict:
+
+- `proved`
+- `partially proved`
+- `not proved`
+
+The verdict must list the proof checked, the most likely remaining failure, and the next fix or verification step.
+
+## Local helper scripts
+
+Install the Python helper dependency before running bundle publishing locally:
+
+```bash
+python3 -m pip install -r plugins/chatdata-trust-layer/requirements.txt
+```
+
 - `bin/bootstrap_repo.py <target-dir>` copies the template repo into a customer-owned path.
 - `bin/publish_bundle.py <repo-path>` renders an immutable published bundle from canonical files.
-
-Examples:
-
-```bash
-python3 bin/chatdata_state.py start
-python3 bin/chatdata_state.py status
-python3 bin/chatdata_state.py license --key CHATDATA-YYYYMMDD-EMAILHASH-CHECKSUM
-python3 bin/chatdata_state.py company-repo --company Foo --owner your-github-org --repo ChatData-Foo
-python3 bin/chatdata_state.py proof
-python3 bin/bootstrap_repo.py /tmp/customer-chatdata-trust
-python3 bin/publish_bundle.py /tmp/customer-chatdata-trust
-```
 
 To publish directly to the Slack runtime once the Worker is deployed:
 
@@ -175,10 +243,8 @@ python3 bin/publish_bundle.py <repo-path> \
   --admin-token "$CHATDATA_ADMIN_TOKEN"
 ```
 
-## Template Repo
+## Template repo
 
-The template copied by `bootstrap_repo.py` lives under `./assets/template-repo`.
+The template copied by `bootstrap_repo.py` lives under [`./assets/template-repo`](./assets/template-repo).
 
-It contains metric packets, answer paths, trusted artifacts, eval questions, trusted SQL, and validation scripts for the first 10-metric trust-layer style workflow.
-
-Full install path, pricing, and roadmap: <https://getchatdata.com>.
+See [`../../docs/product/chatdata-install-and-distribution.md`](../../docs/product/chatdata-install-and-distribution.md) for the exact two-product install path.

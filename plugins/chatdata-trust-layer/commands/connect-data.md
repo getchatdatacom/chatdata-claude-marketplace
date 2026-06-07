@@ -1,23 +1,22 @@
 ---
-description: Remember a CSV, warehouse, repo, dashboard, or MCP source for trusted analysis.
+description: Plan and record the sources, dashboards, dbt artifacts, and owners ChatData should trust.
 ---
 
 # Connect Data
 
-Use this command when the user wants ChatData to remember a CSV directory, DuckDB file, warehouse/MCP source, or existing repo as an analysis source.
+Use this command when a customer asks how to connect data sources or what ChatData needs before it can answer safely.
 
-First run the trial/license guard:
+ChatData starts with trusted metadata and reviewed context. Do not ask for raw warehouse credentials unless the user explicitly chooses a governed access mode.
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" guard
-```
+Collect or inspect:
 
-If active, collect the source name, kind, and path in one short prompt if not already provided. Then run:
+- top metrics
+- source systems
+- blessed dashboards
+- dbt or semantic-layer artifacts
+- owner map
+- freshness and caveats
+- recurring questions
+- sensitive or excluded data boundaries
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" connect-data --name "<name>" --kind "<csv|duckdb|warehouse|mcp|repo>" --path "<path-or-identifier>" --notes "<optional notes>"
-```
-
-After recording the source, inspect enough schema or docs to create the first metric trust packet. Do not ask the user to configure more than needed for the first analysis.
-
-If a company repo is configured, run `/chatdata:sync-context` after recording the source so the shared context is current before analysis starts.
+Save the reusable source inventory with `/chatdata:sync-context` or propose a patch. For local repo setup, route to `/chatdata:scan-sources` or `/chatdata:context-bootstrap`.

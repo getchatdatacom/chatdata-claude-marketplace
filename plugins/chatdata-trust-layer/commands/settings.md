@@ -1,28 +1,22 @@
 ---
-description: ChatData command for Settings.
+description: Open the ChatData settings path for token, MCP, consent, and install repair.
 ---
 
 # Settings
 
-Use this command to show or update ChatData local settings.
+Use this command when the user needs setup, token, consent, MCP install, or workspace repair.
 
-Show settings:
+First run `chatdata_doctor` if available. If a repair is needed, send the user to:
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" settings
+```text
+https://getchatdata.com/app/settings
 ```
 
-Update settings:
+Then tell them which action to use:
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" settings --set telemetry=false --set status_line=true
-```
+- Copy prompt: install or repair Claude Code end to end
+- Copy terminal setup command: repair only `~/.chatdata/config.json`
+- Review consent: grant or revoke metadata sync permission
+- Log in again: refresh the browser session after switching workspaces
 
-Default posture:
-
-- local-first on
-- telemetry off
-- proof receipts on
-- status display on
-
-Never enable telemetry without explicit user opt-in.
+End with `/chatdata:status` and `/chatdata:start`.

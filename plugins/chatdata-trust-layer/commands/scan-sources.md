@@ -1,16 +1,10 @@
 ---
-description: ChatData command for Scan Sources.
+description: Scan dbt, dashboards, docs, owner maps, and source metadata for trusted context.
 ---
 
 # Scan Sources
 
 Use this command to inspect the local trust-layer repo plus the customer's dbt artifacts, dashboard exports, and owner mapping.
-
-First run the trial/license guard:
-
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" guard
-```
 
 Checklist:
 

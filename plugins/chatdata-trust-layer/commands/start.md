@@ -1,42 +1,42 @@
 ---
-description: Start the trial, create local state, and launch the first proof workflow.
+description: Start ChatData and show the full feature catalog for Claude Code.
 ---
 
-# Start ChatData
+# Start
 
-Use this command to begin the 7-day ChatData trial and create local state for the current project.
+Use this command when a customer types `/chatdata` or asks what ChatData can do.
 
-Run:
+This is the customer-facing feature map. Do not hide the breadth of the plugin. First check whether setup is healthy, then show the command catalog grouped by job.
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" start
-```
+## Sequence
 
-If this is the first time ChatData is loaded in this workspace, also run `/chatdata:activate-session` so the ChatData status line, agent metadata, and attribution take over the project footer. The status line is opt-in per workspace and only appears after activation.
+1. Try to use the ChatData MCP server and run `chatdata_doctor`.
+   - If MCP is unavailable, say ChatData is installed but MCP is not connected, then route to ChatData Settings and `/chatdata:login`.
+   - If the doctor reports config, consent, token, workspace, or hub errors, show the failing check and one repair action.
+   - If healthy, show the workspace domain and say approved context can be pulled from the ChatData catalog.
 
-If the user has portal access, sync the company repo during start:
+2. If MCP is healthy, run `chatdata_pull_context`.
+   - If approved context exists, mention the rough families available: metrics, sources, answer paths, evidence, playbooks, decisions, evals, and proof receipts.
+   - If the workspace is blank, route to `/chatdata:onboarding`.
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" start \
-  --email "<user@company.com>" \
-  --token "<chatdata-token>"
-```
+3. Show the full command catalog:
 
-Then ask one concise setup question if profile context is still missing:
+- Setup: `/chatdata:login`, `/chatdata:status`, `/chatdata:update`, `/chatdata:onboarding`, `/chatdata:settings`
+- Catalog: `/chatdata:catalog`, `/chatdata:metrics`, `/chatdata:sync-context`, `/chatdata:audit-context`, `/chatdata:publish-patch`
+- Data connection: `/chatdata:connect-data`, `/chatdata:scan-sources`, `/chatdata:context-bootstrap`, `/chatdata:company-repo`
+- Analysis: `/chatdata:question-framing`, `/chatdata:investigate`, `/chatdata:investigate-metric`, `/chatdata:prepare-wbr`, `/chatdata:write-operating-brief`, `/chatdata:story-and-action`
+- Trust and validation: `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:benchmark`, `/chatdata:build-benchmark`, `/chatdata:but-for-real`
+- Memory and proof: `/chatdata:proof`, `/chatdata:proof-receipts`, `/chatdata:feedback-memory`, `/chatdata:drift-check`, `/chatdata:review-readiness`
+- Build and publish: `/chatdata:bootstrap-repo`, `/chatdata:draft-metric-packet`, `/chatdata:generate-evals`, `/chatdata:create-evals`, `/chatdata:publish-slack-context`
+- Account: `/chatdata:license`, `/chatdata:trial-and-privacy`, `/chatdata:activate-session`
 
-- role or job-to-be-done
-- 3-5 metrics they are responsible for
-- one recurring forum or stakeholder workflow
-- preferred output format
+4. End with the single best next command for the current state.
 
-The helper prints the guided onboarding checklist automatically. Treat that checklist as the first-session path, not as background copy.
+## Required Output
 
-After setup, run a tiny first proof workflow:
-
-1. If this is company or team work, run `/chatdata:login` or `/chatdata:company-repo --email <user@company.com>` to auto-attach the shared private context repo.
-2. Create or identify one metric trust packet.
-3. Run a quick trusted-context read.
-4. Produce the first proof receipt with `/chatdata:proof`.
-5. Run `/chatdata:sync-context` as its own final step so the shared company context is current.
-
-Keep the output ChatData-branded. Do not mention internal inspiration sources.
+- one-line ChatData purpose
+- workspace and MCP status
+- catalog state: approved context, blank workspace, or blocked
+- grouped command catalog
+- best next command
+- support route: `support@getchatdata.com`

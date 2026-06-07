@@ -1,13 +1,17 @@
 ---
-description: Print the branded ChatData impact line for Claude Code.
+description: Translate a metric movement into business impact, risk, and owner action.
 ---
 
-# ChatData Impact
+# Impact
 
-Show the one-line ChatData impact receipt for the current project:
+Use this command when the user asks why a movement matters, how big it is, or what action it implies.
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/bin/chatdata_state.py" impact
-```
+Run the same trust checks as `/chatdata:investigate-metric`, then add an impact layer:
 
-Use this when the user asks what ChatData has saved, whether the shared repo is active, or wants the branded dashboard-style line inside Claude Code.
+- affected KPI and denominator
+- revenue, pipeline, retention, conversion, cost, or operational impact when supported by data
+- owner or team most likely responsible for the follow-up
+- confidence and caveats
+- next action
+
+If the metric movement itself has not been validated, downgrade the impact claim and route to `/chatdata:validate` or `/chatdata:build-benchmark`.
