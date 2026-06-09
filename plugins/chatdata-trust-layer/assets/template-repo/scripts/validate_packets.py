@@ -29,6 +29,33 @@ def has_yaml_value(text: str, *keys: str) -> bool:
     return False
 
 
+def first_yaml_value(text: str, *keys: str) -> str:
+    for key in keys:
+        match = re.search(rf"(?m)^{re.escape(key)}:\s*(.+?)\s*$", text)
+        if not match:
+            continue
+        value = match.group(1).strip().strip("'\"")
+        if value and value not in {"[]", "{}"}:
+            return value
+    return ""
+
+
+def validate_referenced_paths(root: Path) -> list[str]:
+    errors: list[str] = []
+    for path in sorted((root / "metrics").glob("*.yaml")) + sorted((root / "metrics").glob("*.yml")):
+        text = read_text(path)
+        query_path = first_yaml_value(text, "trusted_query_path", "raw_sql_sot")
+        if query_path.startswith("queries/") and not (root / query_path).exists():
+            errors.append(f"Metric references missing query path: {path.relative_to(root)} -> {query_path}")
+
+    for path in sorted((root / "answer-paths").glob("*.yaml")) + sorted((root / "answer-paths").glob("*.yml")):
+        text = read_text(path)
+        query_path = first_yaml_value(text, "query_or_retrieval_path", "retrieval_path")
+        if query_path.startswith("queries/") and not (root / query_path).exists():
+            errors.append(f"Answer path references missing query path: {path.relative_to(root)} -> {query_path}")
+    return errors
+
+
 def validate_customer_ready(root: Path) -> list[str]:
     errors: list[str] = []
     customer_skill = root / "skills" / "customer-analytics-skill.md"
@@ -93,6 +120,12 @@ def main() -> int:
     if missing:
         for path in missing:
             print(f"Missing required path: {path}", file=sys.stderr)
+        return 1
+
+    reference_errors = validate_referenced_paths(root)
+    if reference_errors:
+        for error in reference_errors:
+            print(error, file=sys.stderr)
         return 1
 
     if args.customer_ready:

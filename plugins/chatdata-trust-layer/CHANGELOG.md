@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- bumped the plugin manifest to `0.3.12` after post-deploy QA found template query references and Codex package sync gaps in the `0.3.11` payload
 - added `/chatdata:warehouse-query` plus the built-in `warehouse-query` skill so every install uses metric packets, answer paths, source references, validation, and provenance before raw SQL fallback
 - added customer-owned `skills/customer-analytics-skill.md` and `sources/domain-reference-template.md` to the trust-layer repo template
 - bumped the plugin manifest to `0.3.11` so Claude Code can detect the warehouse-query routing update

@@ -1,6 +1,6 @@
 {
   "name": "chatdata-codex",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "ChatData for Codex: operate like a principal data professional with shared company context, metric packets, validation, proof receipts, and trial gating.",
   "author": {
     "name": "Paras Doshi",
@@ -22,6 +22,7 @@
     "defaultPrompt": [
       "Start ChatData for this data project.",
       "Investigate this metric using ChatData.",
+      "Route this warehouse question through ChatData trusted context.",
       "Check ChatData company repo status."
     ],
     "brandColor": "#0B7A4B"
