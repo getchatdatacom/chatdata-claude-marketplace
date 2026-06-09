@@ -10,14 +10,14 @@ This is the anti-victory-lap pass. It should force a skeptical second read befor
 
 Sequence:
 
-1. Re-open the files, packets, answer paths, scripts, or Slack bundle that the claim depends on.
+1. Re-open the files, packets, answer paths, scripts, context bundle, or proof artifact that the claim depends on.
 2. Name the most likely way the change could still fail in production or in front of a design partner.
 3. Run the smallest useful verification:
    - metric packet validation
    - benchmark query or dashboard tie-out check
    - recurring-question eval
    - drift check
-   - bundle publish dry run
+   - context publish dry run
    - package check
    - focused unit or integration test
 4. Compare the proof to the claim. If the proof only covers part of the claim, downgrade the verdict.

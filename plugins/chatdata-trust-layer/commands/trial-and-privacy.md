@@ -14,4 +14,3 @@ Explain plainly:
 - Settings controls login, consent, token copy, install repair, and account state.
 
 Run `chatdata_doctor` when the user needs live status.
-

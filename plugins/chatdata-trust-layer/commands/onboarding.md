@@ -6,7 +6,7 @@ description: Run the shared ChatData onboarding flow and turn setup learnings in
 
 Use this command for a first customer session, a new teammate joining an existing workspace, or a design-partner setup pass.
 
-This is not a single-player setup checklist. The job is to use existing MCP context as the directional map, fill the missing trust-layer gaps, and save reusable onboarding knowledge back through MCP so every ChatData plugin user and Slack surface can pull the same state.
+This is not a single-player setup checklist. The job is to use existing MCP context as the directional map, fill the missing trust-layer gaps, and save reusable onboarding knowledge back through MCP so every Claude/Codex MCP user can pull the same state.
 
 ## Core Rule
 
@@ -16,7 +16,7 @@ That means:
 
 - Start from existing approved metrics, answer paths, sources, decisions, playbooks, evals, and proof receipts.
 - Pre-fill what the workspace already knows instead of asking the user to repeat it.
-- Ask only for missing or conflicting owner, source, grain, caveat, benchmark, and scope details.
+- Ask only for missing or conflicting owner, source, grain, caveat, raw SQL SoT, verified dashboard/report SoT, business-context, benchmark, and scope details.
 - Treat pending patches as directional but not approved.
 - Do not overwrite existing context silently. Update the canonical artifact or propose a reviewed merge patch.
 - If the existing context belongs to the wrong workspace or domain, stop before onboarding.
@@ -51,16 +51,23 @@ That means:
 
 6. Ask the smallest useful onboarding question.
    - For blank workspaces: "Which 10 metrics must always return the same answer?"
-   - For directional workspaces: ask for the highest-value missing detail, such as the owner for one metric, the blessed dashboard, the benchmark query, or the recurring question to save first.
+   - For directional workspaces: ask for the highest-value missing detail, such as the owner for one metric, the raw SQL SoT, the verified dashboard/report SoT, the business-context packet, the benchmark query, or the recurring question to save first.
    - For conflicting workspaces: ask which existing artifact is canonical, then propose a patch rather than creating a duplicate.
 
 7. Save the reusable result through MCP.
-   - Use `chatdata_create_metric_card` for a reviewed metric definition, owner, grain, source, freshness, caveat, or validation rule.
-   - Use `chatdata_save_answer_path` for a reviewed recurring question and route.
-   - Use `chatdata_create_proof_receipt` for install proof, onboarding proof, first trusted answer proof, or benchmark proof.
-   - Use `chatdata_propose_patch` when the onboarding result needs owner review or touches broader shared guidance.
+   - Use `chatdata_create_metric_card` only for an actual metric card: count, rate, amount, or status definition with grain, source, owner, freshness, caveats, and validation rules.
+   - Do not use metric cards for playbooks, routing rules, attribution decision logic, source stacks, evals, decisions, or answer paths. Use `chatdata_save_answer_path` for recurring questions and routes; use `chatdata_propose_patch` under `playbooks/`, `sources/`, `evals/`, or `decisions/` for broader shared guidance.
+    - Use `chatdata_save_answer_path` to submit a recurring question and route to human review.
+    - Use `chatdata_create_proof_receipt` to submit install proof, onboarding proof, first trusted answer proof, or benchmark proof to human review.
+   - Use `chatdata_propose_patch` when the onboarding result needs owner review or touches broader shared guidance, such as `skills/customer-analytics-skill.md` or `sources/*.md`.
+   - Report the `cdo_pre_review` decision, score, and required rewrites returned by the write. If the CDO pre-review marks the item `needs_rewrite`, fix that before saying the artifact is approval-ready.
+   - Do not call any newly submitted result approved until it appears in the review queue and is published.
 
-8. When a local trust-layer repo is available, create shared onboarding patches:
+8. Use the ChatData MCP server and run `chatdata_run_context_steward`.
+   - This is mandatory after onboarding writes. It catches duplicate metric families, duplicate answer paths, duplicate decisions, duplicate source references, and pending-only merge candidates before any new item is trusted.
+   - Treat generated merge proposals as human-review work. Do not publish them automatically.
+
+9. When a local trust-layer repo is available, create shared onboarding patches:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/bin/onboarding_packet.py" <trust-layer-repo> --workspace "<workspace domain>" --pilot-domain "<pilot domain>" --owner "<owner email>" --include-markdown
@@ -73,9 +80,12 @@ Review the returned patches, then propose them with `chatdata_propose_patch`. Th
 - `decisions/onboarding-scope.md`
 - `playbooks/onboarding-sync-loop.md`
 
-9. End with a proof-oriented close:
+If the trust-layer repo was just bootstrapped, also fill or propose patches for `skills/customer-analytics-skill.md` and the first `sources/<domain>.md` reference. Those files carry the customer-specific entity, date-window, source, and gotcha rules that the built-in `/chatdata:warehouse-query` workflow reads before raw SQL fallback.
+
+10. End with a proof-oriented close:
    - report what existing MCP context guided the session
    - report what new shared artifact or pending patch was created
+   - report the steward run summary and whether merge proposals exist
    - report what remains local-only, if anything
    - recommend `/chatdata:audit-context` or `/chatdata:proof` before calling the onboarding result trusted
    - show `/chatdata:start` as the command catalog so the user sees the full plugin surface after onboarding

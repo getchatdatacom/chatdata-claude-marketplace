@@ -18,4 +18,3 @@ Output:
 - owner action or next decision
 
 If the answer path should be reused, run or recommend `/chatdata:sync-context` and `/chatdata:proof`.
-

@@ -6,7 +6,7 @@ description: Compatibility route for legacy company-repo setup; prefer MCP-backe
 
 Use this command only as a compatibility route for older ChatData instructions that mention a company repo.
 
-Current ChatData setup is MCP-backed shared workspace context. A customer-owned repo can still be useful for source files, metric packets, SQL, evals, and Slack bundle publishing, but it is not required for the status line or first onboarding.
+Current ChatData setup is MCP-backed shared workspace context. A customer-owned repo can still be useful for source files, metric packets, raw SQL SoTs, verified dashboard/report references, evals, and context publishing, but it is not required for the status line or first onboarding.
 
 Sequence:
 

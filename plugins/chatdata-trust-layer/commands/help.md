@@ -19,10 +19,10 @@ Then show the command map:
 - Start and setup: `/chatdata:start`, `/chatdata:login`, `/chatdata:status`, `/chatdata:update`, `/chatdata:onboarding`, `/chatdata:settings`
 - Catalog and context: `/chatdata:catalog`, `/chatdata:metrics`, `/chatdata:sync-context`, `/chatdata:audit-context`, `/chatdata:publish-patch`
 - Data connection: `/chatdata:connect-data`, `/chatdata:scan-sources`, `/chatdata:context-bootstrap`, `/chatdata:company-repo`
-- Analysis: `/chatdata:question-framing`, `/chatdata:investigate`, `/chatdata:investigate-metric`, `/chatdata:prepare-wbr`, `/chatdata:write-operating-brief`, `/chatdata:story-and-action`
+- Analysis: `/chatdata:question-framing`, `/chatdata:warehouse-query`, `/chatdata:investigate`, `/chatdata:investigate-metric`, `/chatdata:prepare-wbr`, `/chatdata:write-operating-brief`, `/chatdata:story-and-action`
 - Trust and validation: `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:benchmark`, `/chatdata:build-benchmark`, `/chatdata:but-for-real`
 - Memory and proof: `/chatdata:proof`, `/chatdata:proof-receipts`, `/chatdata:feedback-memory`, `/chatdata:drift-check`, `/chatdata:review-readiness`
-- Build and publish: `/chatdata:bootstrap-repo`, `/chatdata:draft-metric-packet`, `/chatdata:generate-evals`, `/chatdata:create-evals`, `/chatdata:publish-slack-context`
+- Build and publish: `/chatdata:bootstrap-repo`, `/chatdata:draft-metric-packet`, `/chatdata:generate-evals`, `/chatdata:create-evals`, `/chatdata:publish-patch`
 - Account: `/chatdata:license`, `/chatdata:trial-and-privacy`, `/chatdata:activate-session`
 
 If approved context already exists in MCP, route first-session setup to `/chatdata:onboarding` so existing metrics, answer paths, source references, decisions, playbooks, evals, and proof receipts become the directional setup map. Do not ask users to repeat context the workspace already knows.

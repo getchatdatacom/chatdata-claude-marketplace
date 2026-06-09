@@ -39,6 +39,11 @@ def read_small(path: Path, max_chars: int = 80_000) -> str:
     return text[:max_chars]
 
 
+def is_template_reference(path: Path) -> bool:
+    text = read_small(path)
+    return path.name.lower() == "readme.md" or path.name == "domain-reference-template.md" or re.search(r"(?m)^template:\s*true\s*$", text) is not None
+
+
 def metric_rows(repo: Path) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     for path in list_files(repo, ["metrics/*.yaml", "metrics/*.yml", "metrics/*.md"]):
@@ -101,6 +106,7 @@ def source_rows(repo: Path) -> list[dict[str, str]]:
             "status": "present",
         }
         for path in source_paths
+        if not is_template_reference(path)
     ]
 
 
@@ -188,7 +194,7 @@ def build_shared_packet(
         + "\n\n## Shared Next Actions\n\n"
         + "1. Confirm the 10 metrics that must return the same answer for this workspace.\n"
         + "2. Fill missing owners, grain, freshness rules, and caveats before promoting paths to trusted.\n"
-        + "3. Save reusable corrections through MCP so every plugin user and Slack surface pulls the same context.\n"
+        + "3. Save reusable corrections through MCP so every Claude/Codex MCP user pulls the same context.\n"
         + "4. Record a proof receipt after the first trusted answer or onboarding review passes.\n\n"
         + "## Multiplayer Rule\n\n"
         + "A user's onboarding work is not complete until the reusable pieces are proposed or saved through MCP. "

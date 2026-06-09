@@ -19,4 +19,3 @@ Sequence:
 5. If the correction affects a trusted answer, recommend `/chatdata:audit-context`.
 
 Do not leave durable customer feedback only in the chat transcript.
-

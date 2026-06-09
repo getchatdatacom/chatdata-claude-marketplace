@@ -13,12 +13,15 @@ Use this command when the customer analytics engineer is ready to create the Cha
 python3 "${CLAUDE_PLUGIN_ROOT}/bin/bootstrap_repo.py" <target-dir>
 ```
 
-3. Open the new repo and fill the owner mapping, dashboard URLs, and top-10-metric list.
+3. Open the new repo and fill:
+   - `skills/customer-analytics-skill.md`
+   - one `sources/*.md` reference per governed domain or dataset
+   - the owner mapping, dashboard URLs, and top-10-metric list
 4. End by summarizing what still needs customer input before the first publish.
 
 Required output:
 
 - repo path
 - copied template structure
-- missing inputs list
+- missing inputs list, including customer analytics skill and source references
 - recommended next command

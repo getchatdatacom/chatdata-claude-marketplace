@@ -6,9 +6,11 @@ description: Inspect, create, or repair metric trust packets.
 
 Use this command when the user wants to define, inspect, repair, or compare metrics.
 
-Run `chatdata_doctor`, `chatdata_pull_context`, then search for the metric name, synonyms, source model, dashboard, and owner. If the metric exists, summarize its owner, grain, source, caveats, freshness, validation, and review state. If it is missing or incomplete, route to `/chatdata:draft-metric-packet`.
+Run `chatdata_doctor`, `chatdata_pull_context`, `chatdata_list_review_queue`, then search for the metric name, synonyms, source model, dashboard, and owner. If the metric exists, summarize its owner, grain, source, caveats, freshness, validation, and review state. If pending patches or open conflicts touch the same metric family, mark the metric `needs review` until the queue is resolved. If it is missing or incomplete, route to `/chatdata:draft-metric-packet`.
 
 Do not invent a metric definition. Mark missing owner, grain, source, denominator, or caveat fields as open review questions.
+
+Before saying a metric packet is canonical, run or reference `chatdata_run_context_steward` so duplicate metric families and formula conflicts are surfaced as review work instead of silently creating another definition.
 
 Required next commands:
 

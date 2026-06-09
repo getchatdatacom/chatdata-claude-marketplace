@@ -12,10 +12,23 @@ node dist/index.js
 
 ## Activation
 
-1. Open `https://getchatdata.com/activate` or a local Worker URL.
-2. Sign up or log in with a company email and password.
-3. Copy the issued access token.
-4. Run the MCP tool `chatdata_activate` with the email, token, and hub URL.
+1. Open ChatData Settings for the intended workspace.
+2. Click **Copy terminal setup command**.
+3. Paste the full command into Terminal and press Return.
+4. Run `chatdata_doctor` to verify domain, consent, and hub access.
+
+The raw token/config JSON is only for debugging. Do not paste raw JSON into Terminal.
+
+## Surface Router
+
+Choose the client surface before registering MCP.
+
+| Surface | MCP registration | Extra setup |
+| --- | --- | --- |
+| Claude Code | `claude mcp add --scope user chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js"` | Install or update the ChatData Claude plugin for `/chatdata:` commands. |
+| Codex | `codex mcp add chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js"` | No Claude plugin and no `/chatdata:` slash commands. |
+
+If both `claude` and `codex` CLIs are installed, use the current chat/client or the user's explicit request to choose the surface.
 
 For customer setup, the direct build path uses the ChatData-owned marketplace distribution repo:
 
@@ -39,7 +52,9 @@ After login, click **Copy terminal setup command**, paste that whole command int
 
 The raw **Client config** JSON is shown for debugging and manual setup. Do not paste the raw JSON directly into Terminal. If Terminal prints `zsh: command not found: token:` or `zsh: command not found: workspace_id:`, you pasted the JSON by mistake; go back to Settings and copy the terminal setup command instead.
 
-Add the server to Claude Code:
+Add the server to the selected surface.
+
+Claude Code:
 
 ```bash
 CHATDATA_INSTALL_REPO_DIR="${CHATDATA_INSTALL_REPO_DIR:-$HOME/.chatdata/chatdata-claude-marketplace}"
@@ -64,7 +79,7 @@ claude mcp remove chatdata -s user 2>/dev/null || true
 claude mcp add --scope user chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js"
 ```
 
-Or add it to Codex:
+Codex:
 
 ```bash
 CHATDATA_INSTALL_REPO_DIR="${CHATDATA_INSTALL_REPO_DIR:-$HOME/.chatdata/chatdata-claude-marketplace}"
@@ -73,19 +88,28 @@ test -f "$CHATDATA_MCP_DIR/dist/index.js" || { echo "ChatData MCP is not built y
 codex mcp add chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js"
 ```
 
-Verify Claude Code can see the server:
+Verify the selected surface can see the server.
+
+Claude Code:
 
 ```bash
 claude mcp list
 ```
 
-Restart the client, then ask in natural language:
+Codex:
+
+```bash
+codex mcp list
+codex mcp get chatdata
+```
+
+Restart or reconnect the selected client, then ask in natural language:
 
 ```text
 Use the ChatData MCP server and run the chatdata_doctor tool. Show me the JSON result.
 ```
 
-Do not type only `chatdata_doctor` into Claude Code. If a planning screen opens, press Esc and use the full sentence above.
+Do not type only `chatdata_doctor` into Claude Code. If a planning screen opens, press Esc and use the full sentence above. In Codex, use the same natural-language request if the MCP tools are not exposed yet.
 
 To catch a stale or wrong workspace token, pass the company domain you expected:
 
@@ -128,6 +152,7 @@ Available tools:
 - `chatdata_read_context_file(path)`
 - `chatdata_propose_patch(path, base_hash, new_markdown, purpose)`
 - `chatdata_list_review_queue()`
+- `chatdata_run_context_steward()`
 - `chatdata_publish_patch(patch_id)`
 - `chatdata_create_metric_card(input)`
 - `chatdata_save_answer_path(input)`
@@ -140,6 +165,14 @@ Available tools:
 - `chatdata_export_bundle()`
 
 Context file tools accept only relative Markdown paths like `metrics/activation-rate.md`. Absolute paths and `..` parent-directory segments are rejected before the MCP reads the local cache or calls the hub.
+
+Use `chatdata_create_metric_card` only for metric definitions: counts, rates, amounts, or status metrics with explicit grain, owner, source, raw SQL SoT when present, verified dashboard/report SoT when present, freshness, caveats, business context, uncertainty policy, and validation rules. Put playbooks, attribution routing, source stacks, evals, decisions, and answer paths in their matching context folders instead of `metrics/`.
+
+For recurring answers, `chatdata_save_answer_path` should include the canonical question, answer state, metric id, SQL or retrieval path, raw SQL SoT usage, verified dashboard/report tie-out, business-context check, validation rule, uncertainty policy, caveats, and reuse rule.
+
+For proof receipts, `chatdata_create_proof_receipt` should include the answer state, evidence checked, source path, raw SQL SoT or verified dashboard/report tie-out, validation result, business-context check, uncertainty or validation interval, caveats, and next action.
+
+Structured writes and proposed patches run through ChatData CDO pre-review before they become publishable human-review work. The response may include `cdo_pre_review`; if its decision is `needs_rewrite`, fix the required rewrites before asking a governance reviewer to approve the patch.
 
 On startup, the MCP server tries a best-effort pull. If the hub is unavailable, local-cache reads still work.
 

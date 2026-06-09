@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import re
 import shutil
 import urllib.request
 from datetime import date, datetime, timezone
@@ -12,6 +13,9 @@ try:
     import yaml
 except ModuleNotFoundError:  # pragma: no cover - exercised by local smoke tests when PyYAML is absent
     yaml = None
+
+
+PLACEHOLDER_PATTERN = re.compile(r"\[[^\]\n]+\]")
 
 
 def sha256_for_paths(paths: list[Path], root: Path) -> str:
@@ -26,6 +30,71 @@ def list_files(root: Path, pattern: str) -> list[Path]:
     return [path for path in root.glob(pattern) if path.is_file()]
 
 
+def read_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def is_template_reference(path: Path) -> bool:
+    text = read_text(path)
+    return path.name.lower() == "readme.md" or path.name == "domain-reference-template.md" or re.search(r"(?m)^template:\s*true\s*$", text) is not None
+
+
+def has_placeholders(path: Path) -> bool:
+    return PLACEHOLDER_PATTERN.search(read_text(path)) is not None
+
+
+def has_yaml_value(text: str, *keys: str) -> bool:
+    for key in keys:
+        match = re.search(rf"(?m)^{re.escape(key)}:\s*(.+?)\s*$", text)
+        if match and match.group(1).strip().strip("'\"") not in {"", "[]", "{}"}:
+            return True
+    return False
+
+
+def validate_customer_ready(repo: Path) -> list[str]:
+    errors: list[str] = []
+    customer_skill = repo / "skills" / "customer-analytics-skill.md"
+    if not customer_skill.exists():
+        errors.append("Missing skills/customer-analytics-skill.md.")
+    elif has_placeholders(customer_skill):
+        errors.append("Customer analytics skill still contains placeholders.")
+
+    sources_dir = repo / "sources"
+    if not sources_dir.exists():
+        errors.append("Missing sources/ directory.")
+        source_refs: list[Path] = []
+    else:
+        source_refs = [
+            path
+            for pattern in ("*.md", "*.yaml", "*.yml")
+            for path in sources_dir.glob(pattern)
+            if path.is_file() and not is_template_reference(path)
+        ]
+    if not source_refs:
+        errors.append("No filled source reference found under sources/. Copy domain-reference-template.md to sources/<domain>.md and replace placeholders.")
+    for path in source_refs:
+        text = read_text(path)
+        if has_placeholders(path):
+            errors.append(f"Source reference still contains placeholders: {path.relative_to(repo)}")
+        if not has_yaml_value(text, "owner"):
+            errors.append(f"Source reference is missing owner: {path.relative_to(repo)}")
+        if not has_yaml_value(text, "domain", "id"):
+            errors.append(f"Source reference is missing domain or id: {path.relative_to(repo)}")
+
+    for path in sorted(list_files(repo, "metrics/*.yaml") + list_files(repo, "metrics/*.yml")):
+        text = read_text(path)
+        if not has_yaml_value(text, "trusted_query_path", "raw_sql_sot"):
+            errors.append(f"Metric is missing trusted query or raw SQL SoT: {path.relative_to(repo)}")
+        if not has_yaml_value(text, "trusted_dashboard_url", "verified_dashboard_sot", "verified_report_sot"):
+            errors.append(f"Metric is missing dashboard or report SoT: {path.relative_to(repo)}")
+        if not has_yaml_value(text, "freshness_rule", "freshness"):
+            errors.append(f"Metric is missing freshness rule: {path.relative_to(repo)}")
+        if "validation_tolerance:" not in text and not has_yaml_value(text, "validation_rule"):
+            errors.append(f"Metric is missing validation rule: {path.relative_to(repo)}")
+
+    return errors
+
+
 def load_yaml(path: Path):
     with path.open("r", encoding="utf-8") as handle:
         if yaml is not None:
@@ -34,11 +103,7 @@ def load_yaml(path: Path):
 
 
 def simple_yaml_load(text: str):
-    """Parse the small YAML subset used by the ChatData template repo.
-
-    This keeps local packaging working on fresh machines before PyYAML is
-    installed. It is not a general YAML parser.
-    """
+    """Parse the small YAML subset used by the ChatData template repo."""
 
     lines = [
         line.rstrip()
@@ -213,30 +278,43 @@ def build_metric(metric_path: Path) -> dict:
 def build_answer_path(answer_path: Path) -> dict:
     payload = load_yaml(answer_path)
     slack_response = payload.get("slack_response", {})
+    canonical_question = payload.get("canonical_question") or payload.get("question") or payload["answer_path_id"]
+    answer_template = payload.get("answer_template")
+    review_status = payload.get("review_status", "draft")
+    expected_state = payload.get("expected_answer_state")
+    if not expected_state:
+        expected_state = "verified" if review_status in {"approved", "reviewed"} else "needs_review"
+    default_next_action = payload.get("next_action") or "Review the evidence and caveats before reusing this answer path."
+
     return {
         "answerPathId": payload["answer_path_id"],
-        "canonicalQuestion": payload["canonical_question"],
+        "canonicalQuestion": canonical_question,
         "aliases": payload.get("aliases", []),
         "metricId": payload["metric"],
-        "routeId": payload["route_id"],
+        "routeId": payload.get("route_id", payload["answer_path_id"]),
         "preferredDimensions": payload.get("preferred_dimensions", []),
         "retrievalPath": payload["query_or_retrieval_path"],
-        "validationRoutine": payload["validation_routine"],
+        "validationRoutine": payload.get("validation_routine", "needs owner review before auto-trusted reuse"),
         "benchmarkSourcePreference": payload.get("benchmark_source_preference", []),
         "caveats": payload.get("caveats", []),
-        "expectedAnswerState": payload["expected_answer_state"],
-        "reviewStatus": payload["review_status"],
-        "maturity": payload["maturity"],
-        "recurrenceTier": payload["recurrence_tier"],
-        "businessValueTier": payload["business_value_tier"],
+        "expectedAnswerState": expected_state,
+        "reviewStatus": review_status,
+        "maturity": payload.get("maturity", payload.get("trust_state", "reviewed" if review_status in {"approved", "reviewed"} else "draft")),
+        "recurrenceTier": payload.get("recurrence_tier", "unknown"),
+        "businessValueTier": payload.get("business_value_tier", "unknown"),
+        "backend": payload.get("backend"),
+        "defaultDateRange": payload.get("default_date_range"),
+        "expectedShape": payload.get("expected_shape"),
+        "answerTemplate": answer_template,
+        "owner": payload.get("owner"),
         "slackResponse": {
-            "draft": slack_response["draft"],
+            "draft": slack_response.get("draft", answer_template or canonical_question),
             "benchmarked": slack_response.get("benchmarked"),
-            "verified": slack_response["verified"],
+            "verified": slack_response.get("verified", answer_template or canonical_question),
             "trusted": slack_response.get("trusted"),
             "needsReview": slack_response.get("needs_review"),
-            "nextActionDraft": slack_response["next_action_draft"],
-            "nextActionVerified": slack_response["next_action_verified"],
+            "nextActionDraft": slack_response.get("next_action_draft", default_next_action),
+            "nextActionVerified": slack_response.get("next_action_verified", default_next_action),
             "nextActionTrusted": slack_response.get("next_action_trusted"),
             "evidenceDraft": slack_response.get("evidence_draft", []),
             "evidenceVerified": slack_response.get("evidence_verified", []),
@@ -334,7 +412,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Render an immutable ChatData Slack bundle from canonical repo files."
     )
-    parser.add_argument("repo_path", help="Path to the trust-layer repo")
+    default_repo = Path(__file__).resolve().parents[1] / "assets" / "template-repo"
+    parser.add_argument(
+        "repo_path",
+        nargs="?",
+        default=str(default_repo),
+        help="Path to the trust-layer repo. Defaults to the plugin template repo.",
+    )
     parser.add_argument("--customer-id", default="demo-open-door-like")
     parser.add_argument("--workspace-id", default="demo-slack-workspace")
     parser.add_argument(
@@ -351,9 +435,19 @@ def main() -> int:
         default=None,
         help="Admin token for runtime publish.",
     )
+    parser.add_argument(
+        "--allow-template-placeholders",
+        action="store_true",
+        help="Allow publishing the packaged demo template even when customer-specific skill/source placeholders remain.",
+    )
     args = parser.parse_args()
 
     repo = Path(args.repo_path).expanduser().resolve()
+    if not args.allow_template_placeholders:
+        errors = validate_customer_ready(repo)
+        if errors:
+            raise SystemExit("Trust-layer repo is not customer-ready:\n- " + "\n- ".join(errors))
+
     published = repo / "published"
 
     if published.exists():
@@ -364,11 +458,15 @@ def main() -> int:
     answer_path_files = list_files(repo, "answer-paths/*.yaml")
     trusted_query_files = list_files(repo, "queries/trusted/*.sql")
     generated_query_files = list_files(repo, "queries/generated/*.sql")
+    analytics_skill_files = list_files(repo, "skills/*.md")
+    source_reference_files = list_files(repo, "sources/*.md") + list_files(repo, "sources/*.yaml") + list_files(repo, "sources/*.yml")
     source_files = (
         metric_files
         + answer_path_files
         + trusted_query_files
         + generated_query_files
+        + analytics_skill_files
+        + source_reference_files
         + list_files(repo, "artifacts/*.yaml")
         + list_files(repo, "catalog/*.yaml")
         + list_files(repo, "evals/*.yaml")
@@ -387,6 +485,8 @@ def main() -> int:
         "compatibilityVersion": "1",
         "metricsCount": len(metric_files),
         "answerPathsCount": len(answer_path_files),
+        "analyticsSkillsCount": len(analytics_skill_files),
+        "sourceReferencesCount": len([path for path in source_reference_files if not is_template_reference(path)]),
     }
 
     bundle = {
@@ -405,6 +505,8 @@ def main() -> int:
         "artifacts",
         "catalog",
         "evals",
+        "skills",
+        "sources",
         "scripts",
     ]:
         copy_if_exists(repo / relative, published / relative)

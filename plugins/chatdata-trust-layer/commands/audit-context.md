@@ -31,6 +31,7 @@ Then use the ChatData MCP server and run `chatdata_run_context_steward`.
 Then use the ChatData MCP server and run `chatdata_list_review_queue`.
 
 - List pending patches that could change metric definitions, answer paths, benchmarks, owner rules, or proof receipts.
+- Treat items marked `needs_rewrite` by CDO pre-review as quality blockers, not approval-ready work.
 - List steward merge proposals as "human approval needed" with the proposed canonical path and matched source files when available.
 - If a pending patch affects the workflow being audited, mark the workflow `needs review` until the patch is published or rejected.
 
@@ -38,7 +39,7 @@ Then use the ChatData MCP server and run `chatdata_export_bundle`.
 
 - Check that exported metrics, answer paths, and proof receipts line up with the workflow the user wants to trust.
 - Check for duplicate or conflicting metric ids, answer paths, owner rules, or source references. If two artifacts appear to govern the same recurring question and the steward did not generate a merge proposal, mark the workflow `partially proved` until one canonical path is chosen.
-- If required context is missing, recommend the smallest MCP-backed repair: `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or a patch tool such as `chatdata_propose_patch`.
+- If required context is missing, recommend the smallest MCP-backed repair: `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or a patch tool such as `chatdata_propose_patch`; each repair creates human-review work before it becomes trusted context.
 
 Before returning a trusted verdict, run a compact analyst-quality pass:
 
@@ -53,7 +54,7 @@ Required output:
 - MCP doctor status
 - context revision and cache status
 - steward run summary, including duplicate clusters and generated merge proposals
-- review-queue risk
+- review-queue risk, including CDO pre-review rewrite blockers
 - exported bundle summary
 - duplicate or conflict risk
 - trust verdict: `proved`, `partially proved`, or `not proved`

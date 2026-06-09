@@ -13,8 +13,11 @@ Collect or inspect:
 - top metrics
 - source systems
 - blessed dashboards
+- verified dashboard or saved-report SoTs used for eval loops
+- owner-approved raw SQL SoTs, query files, or BI-generated SQL when present
 - dbt or semantic-layer artifacts
 - owner map
+- business context: company type, revenue model, key segments, operating cadence, and expected metric behavior
 - freshness and caveats
 - recurring questions
 - sensitive or excluded data boundaries

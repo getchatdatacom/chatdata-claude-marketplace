@@ -18,3 +18,4 @@ Frame the request around:
 
 Then route to `/chatdata:investigate-metric`, `/chatdata:prepare-wbr`, or `/chatdata:metrics`.
 
+If the question requires warehouse, BI, dashboard, SQL, or recurring KPI context, route to `/chatdata:warehouse-query` before analysis so the session checks metric packets, answer paths, source references, and provenance before raw SQL fallback.

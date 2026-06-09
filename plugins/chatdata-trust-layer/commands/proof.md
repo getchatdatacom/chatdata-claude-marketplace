@@ -25,7 +25,15 @@ Build a proof receipt with the facts the user supplied or the command observed:
 
 - workflow name
 - question or task
+- answer state: `answered`, `clarification_needed`, `needs_analyst_review`, or `refused`
+- linked metric id when applicable
+- source path used
+- raw SQL SoT used, or explicit `not available`
+- verified dashboard/report tie-out used, or explicit `not available`
 - evidence checked
+- validation result and tolerance
+- business-context check
+- uncertainty or validation interval
 - result: `passed`, `failed`, or `needs_review`
 - confidence
 - time saved, if known
@@ -34,7 +42,7 @@ Build a proof receipt with the facts the user supplied or the command observed:
 
 Then use the ChatData MCP server and run `chatdata_create_proof_receipt`.
 
-- If the proof shows a recurring answer path is now reviewed, consider `chatdata_save_answer_path` only when the approved path, owner, validation, and caveats are explicit.
+- If the proof shows a recurring answer path is ready, use `chatdata_save_answer_path` to submit it for human review only when the path, owner, validation, and caveats are explicit.
 - If the proof exposes missing or stale context, propose the smallest repair through `chatdata_create_metric_card`, `chatdata_save_answer_path`, or a patch tool such as `chatdata_propose_patch`.
 - If the proof depends on a corrected reusable definition or answer path, sync that artifact first or mark the proof `needs_review`.
 

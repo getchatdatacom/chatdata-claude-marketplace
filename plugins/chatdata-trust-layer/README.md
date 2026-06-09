@@ -7,9 +7,9 @@ It supports two modes with the same core:
 1. `Principal analyst mode`
    An individual founder, operator, PM, or data lead uses Claude Code as an independent chief data officer to investigate metrics, prep a weekly business review, and write operating briefs from trusted artifacts.
 2. `Builder mode`
-   An analytics engineer or data owner uses the same plugin to bootstrap the trust-layer repo, draft metric packets, publish immutable Slack bundles, and keep reviewed answer paths visible instead of burying them in chat transcripts.
+   An analytics engineer or data owner uses the same plugin to bootstrap the trust-layer repo, draft metric packets, publish reviewed MCP context, and keep reviewed answer paths visible instead of burying them in chat transcripts.
 
-This is one product, not two disconnected plugins. The plugin is the wedge. Slack is the organizational expansion surface.
+This is one product, not two disconnected plugins. The active product is the Claude plugin plus MCP-backed context for Claude-native and Codex-native workflows. Slack is a later expansion surface.
 
 ## Why This Should Be A Plugin
 
@@ -18,11 +18,26 @@ This is worth being a plugin because it can:
 - deliver value to one operator before an admin-heavy workspace rollout exists
 - package builder workflows like bootstrap, scan, draft, publish, and drift checks into installable commands
 - use cross-session state, stronger retrieval, and batching for exploratory or file-heavy work
-- hand Slack a stronger reviewed trust layer instead of making Slack do first-time setup
+- give every MCP client the same reviewed trust layer instead of making each client rebuild context alone
 
 The discipline is important: keep metric packets, reviewed answer paths, and evals readable and customer-owned. The plugin is the leverage layer, not the only copy of business logic.
 
 When a customer or internal stack already has a strong metadata substrate, such as Data Hub, the plugin should use that layer for catalog, lineage, ownership, and discovery context instead of recreating those primitives locally.
+
+## Warehouse Query Routing
+
+The plugin ships a built-in `warehouse-query` skill at `skills/warehouse-query/SKILL.md`.
+
+Use `/chatdata:warehouse-query` for warehouse, BI, metric, dashboard, SQL, funnel, retention, revenue, pipeline, and recurring analytics questions. It forces the same route across customers:
+
+1. MCP health and approved context
+2. metric packet or semantic layer
+3. reviewed answer path
+4. trusted SQL, dashboard/report artifact, proof receipt, or eval
+5. source references and customer business context
+6. raw SQL fallback only after the trusted route cannot answer
+
+Bootstrap repos also include `skills/customer-analytics-skill.md` and `sources/domain-reference-template.md`. Customers fill those with entity disambiguation, domain references, date-window conventions, freshness lag, owner routing, and gotchas. The generic plugin skill supplies the workflow; the customer files supply the business-specific facts.
 
 ## Always-On MCP Loop
 
@@ -49,7 +64,7 @@ Onboarding is multiplayer by default:
 2. Use existing metrics, answer paths, source references, decisions, playbooks, evals, and proof receipts as the directional setup map.
 3. Ask only for missing or conflicting details.
 4. Save reviewed metric cards, answer paths, proof receipts, or proposed patches through MCP.
-5. Pull again so every plugin user and Slack surface sees the same context.
+5. Pull again so every Claude/Codex MCP user sees the same context.
 
 If context already exists, ChatData should not ask the user to repeat it. The existing shared context should make onboarding feel pre-filled and opinionated. Pending patches can guide the conversation, but they are not trusted until reviewed and published.
 
@@ -66,9 +81,11 @@ Those patches create shared context for the onboarding packet, source inventory,
 The plugin encodes the working standard from the current `ai-analyst-lab/ai-analyst` and `parasdoshicom/ai-plus-data` references:
 
 - question framing: start with the decision, metric, grain, period, segment, and hypothesis before writing queries or summaries
-- metric trust packets: official definition, owner, grain, source, freshness, caveats, validation rules, approved answer paths, and eval questions
-- source tie-out: compare generated answers to blessed dashboard/model/query totals and stop when foundational numbers do not match
+- metric trust packets: official definition, owner, grain, source, raw SQL SoT when present, verified dashboard/report SoT, business context, freshness, caveats, validation rules, approved answer paths, and eval questions
+- source tie-out: compare generated answers to blessed dashboard/model/raw-SQL/report totals and stop when foundational numbers do not match
+- business-context pass: compare the claim against the customer's company type, revenue model, segment logic, operating cadence, and expected metric behavior
 - validation pass: rederive key numbers, check arithmetic, compare against expected ranges, inspect joins/filters, and name confidence
+- uncertainty pass: attach a statistical confidence interval, deterministic validation interval, or explicit `not available` state for every numeric answer
 - self-correcting SQL loop: state assumptions, run the query, inspect errors or surprises, revise, then validate the final answer
 - answer memory: save recurring, owner-reviewed paths so the next user gets the trusted route instead of another bespoke analysis
 
@@ -96,6 +113,7 @@ Do not claim those outcomes are proven for a customer until a proof receipt or e
 ### Principal analyst mode
 
 - `/chatdata:question-framing`
+- `/chatdata:warehouse-query`
 - `/chatdata:investigate`
 - `/chatdata:investigate-metric`
 - `/chatdata:impact`
@@ -126,7 +144,6 @@ Do not claim those outcomes are proven for a customer until a proof receipt or e
 - `/chatdata:drift-check`
 - `/chatdata:feedback-memory`
 - `/chatdata:publish-patch`
-- `/chatdata:publish-slack-context`
 - `/chatdata:review-readiness`
 - `/chatdata:but-for-real`
 
@@ -161,7 +178,7 @@ CHATDATA_REPO="${CHATDATA_REPO:-$HOME/Documents/ChatData}"
 "$CHATDATA_REPO/scripts/package_chatdata_products.sh" https://api.getchatdata.com
 ```
 
-That script creates a plugin zip, a trust-repo template zip, and a Slack manifest under `dist/chatdata-products/`.
+That script creates a plugin zip and a trust-repo template zip under `dist/chatdata-products/`. Any Slack manifest output is later-stage packaging, not the active product path.
 
 ## Update
 
@@ -195,12 +212,12 @@ Typical outputs:
 - metric movement investigation
 - weekly business review prep
 - executive operating brief
-- follow-up questions and caveats worth carrying into Slack later
+- follow-up questions and caveats worth saving into MCP context
 - skeptical second-pass verdict before calling an answer trusted or ready
 
 ### Builder mode
 
-Use the same plugin when you are creating or maintaining the trust layer that powers the Slack app.
+Use the same plugin when you are creating or maintaining the trust layer that powers Claude/Codex MCP workflows.
 
 Typical outputs:
 
@@ -208,7 +225,7 @@ Typical outputs:
 - metric packets
 - benchmark queries
 - eval sets
-- immutable Slack bundle publish
+- reviewed context publishing
 - drift and review-readiness checks
 - skeptical second-pass proof before a trust-layer change is marked complete
 
@@ -216,7 +233,7 @@ Typical outputs:
 
 ChatData should not say "done", "ready", "trusted", "fixed", or "this should work" unless it has checked the files and run the smallest relevant proof.
 
-Use `/chatdata:but-for-real` after meaningful plugin, trust-layer, or Slack-bundle changes. The expected result is a short verdict:
+Use `/chatdata:but-for-real` after meaningful plugin, MCP, or trust-layer changes. The expected result is a short verdict:
 
 - `proved`
 - `partially proved`
@@ -233,9 +250,9 @@ python3 -m pip install -r plugins/chatdata-trust-layer/requirements.txt
 ```
 
 - `bin/bootstrap_repo.py <target-dir>` copies the template repo into a customer-owned path.
-- `bin/publish_bundle.py <repo-path>` renders an immutable published bundle from canonical files.
+- `bin/publish_bundle.py <repo-path>` renders an immutable published bundle from canonical files. It is strict by default: customer-specific skill and source placeholders must be filled before publish. Use `--allow-template-placeholders` only for local packaging smoke tests of the demo scaffold.
 
-To publish directly to the Slack runtime once the Worker is deployed:
+Later-stage Slack publishing, only after that surface is reactivated:
 
 ```bash
 python3 bin/publish_bundle.py <repo-path> \
@@ -247,4 +264,4 @@ python3 bin/publish_bundle.py <repo-path> \
 
 The template copied by `bootstrap_repo.py` lives under [`./assets/template-repo`](./assets/template-repo).
 
-See [`../../docs/product/chatdata-install-and-distribution.md`](../../docs/product/chatdata-install-and-distribution.md) for the exact two-product install path.
+See [`../../docs/product/chatdata-install-and-distribution.md`](../../docs/product/chatdata-install-and-distribution.md) for the plugin and MCP install path.

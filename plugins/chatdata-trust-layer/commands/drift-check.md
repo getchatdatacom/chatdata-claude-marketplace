@@ -4,7 +4,7 @@ description: Detect drift after dbt, dashboard, metric, answer-path, or feedback
 
 # Drift Check
 
-Use this command after dbt changes, dashboard edits, or repeated Slack feedback incidents.
+Use this command after dbt changes, dashboard edits, raw SQL SoT updates, verified report changes, or repeated plugin/MCP feedback incidents.
 
 Tasks:
 

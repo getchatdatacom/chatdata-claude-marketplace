@@ -14,9 +14,9 @@ https://getchatdata.com/app/settings
 
 Then tell them which action to use:
 
-- Copy prompt: install or repair Claude Code end to end
+- Copy prompt: install or repair ChatData with surface detection first. Claude Code gets the plugin plus MCP path; Codex gets the MCP-only path.
 - Copy terminal setup command: repair only `~/.chatdata/config.json`
 - Review consent: grant or revoke metadata sync permission
 - Log in again: refresh the browser session after switching workspaces
 
-End with `/chatdata:status` and `/chatdata:start`.
+In Claude Code, end with `/chatdata:status` and `/chatdata:start`. For Codex setup, reconnect Codex and run ChatData MCP tools directly.

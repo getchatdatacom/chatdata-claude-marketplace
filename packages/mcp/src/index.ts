@@ -185,7 +185,7 @@ server.tool(
       return text({
         ok: false,
         config_path: configPath,
-        next_action: "Open /activate, copy the token, then run chatdata_activate."
+        next_action: "Open ChatData Settings, copy the terminal setup command, run it, then rerun chatdata_doctor."
       });
     }
 
@@ -401,6 +401,16 @@ server.tool(
 );
 
 server.tool(
+  "chatdata_run_context_steward",
+  "Run the ChatData context steward to detect duplicate reusable context and create human-reviewed merge proposals.",
+  {},
+  async () => {
+    const config = await requireConfig();
+    return text(await hubFetch(config, "/steward/run", { method: "POST" }));
+  }
+);
+
+server.tool(
   "chatdata_publish_patch",
   "Publish one reviewed pending patch by patch_id and refresh the local cache. This is an MCP tool, not a raw shell command.",
   {
@@ -427,7 +437,7 @@ server.tool(
 
 server.tool(
   "chatdata_create_metric_card",
-  "Create an approved trusted metric card in ChatData.",
+  "Submit a metric definition card to the ChatData human review queue. Use only for count, rate, amount, or status metrics, not playbooks, routing guidance, source stacks, evals, decisions, or answer paths.",
   {
     id: z.string().min(1),
     definition: z.string().min(1),
@@ -436,7 +446,14 @@ server.tool(
     exclusions: z.string().optional(),
     caveats: z.string().optional(),
     owner: z.string().optional(),
-    source: z.string().optional()
+    source: z.string().optional(),
+    raw_sql_sot: z.string().optional(),
+    verified_dashboard_sot: z.string().optional(),
+    verified_report_sot: z.string().optional(),
+    freshness: z.string().optional(),
+    validation: z.string().optional(),
+    business_context: z.string().optional(),
+    uncertainty_policy: z.string().optional()
   },
   async (input) => {
     const config = await requireConfig();
@@ -454,14 +471,27 @@ server.tool(
 
 server.tool(
   "chatdata_save_answer_path",
-  "Save an approved reusable answer path in ChatData.",
+  "Submit a reusable answer path to the ChatData human review queue.",
   {
     id: z.string().min(1),
     title: z.string().optional(),
     content: z.string().optional(),
     markdown: z.string().optional(),
     steps: z.array(z.string()).optional(),
-    owner: z.string().optional()
+    owner: z.string().optional(),
+    metric_id: z.string().optional(),
+    answer_state: z.enum(["answered", "clarification_needed", "needs_analyst_review", "refused"]).optional(),
+    source: z.string().optional(),
+    sql_or_retrieval_path: z.string().optional(),
+    raw_sql_sot: z.string().optional(),
+    verified_dashboard_sot: z.string().optional(),
+    verified_report_sot: z.string().optional(),
+    freshness: z.string().optional(),
+    validation: z.string().optional(),
+    business_context_check: z.string().optional(),
+    uncertainty_policy: z.string().optional(),
+    caveats: z.string().optional(),
+    reuse_rule: z.string().optional()
   },
   async (input) => {
     const config = await requireConfig();
@@ -479,7 +509,7 @@ server.tool(
 
 server.tool(
   "chatdata_create_proof_receipt",
-  "Create an approved evidence receipt in ChatData.",
+  "Submit an evidence receipt to the ChatData human review queue.",
   {
     id: z.string().optional(),
     title: z.string().min(1),
@@ -487,7 +517,17 @@ server.tool(
     caveats: z.string().optional(),
     next_action: z.string().optional(),
     owner: z.string().optional(),
-    source: z.string().optional()
+    source: z.string().optional(),
+    metric_id: z.string().optional(),
+    answer_state: z.enum(["answered", "clarification_needed", "needs_analyst_review", "refused"]).optional(),
+    evidence_checked: z.array(z.string()).optional(),
+    raw_sql_sot: z.string().optional(),
+    verified_dashboard_sot: z.string().optional(),
+    verified_report_sot: z.string().optional(),
+    freshness: z.string().optional(),
+    validation: z.string().optional(),
+    business_context_check: z.string().optional(),
+    uncertainty: z.string().optional()
   },
   async (input) => {
     const config = await requireConfig();
@@ -642,7 +682,7 @@ async function requireConfig(): Promise<ChatDataConfig> {
   const config = await readConfig();
 
   if (!config) {
-    throw new Error("ChatData is not activated. Run chatdata_activate with a token from /activate.");
+    throw new Error("ChatData is not activated. Open ChatData Settings, copy the terminal setup command, run it, then rerun this tool.");
   }
 
   return config;
@@ -905,6 +945,19 @@ async function safeJson(response: Response): Promise<unknown> {
 }
 
 async function queueLocalWrite(config: ChatDataConfig, item: LocalQueueItem, error: string): Promise<unknown> {
+  const guard = guardLocalQueueItem(item);
+  if (!guard.ok) {
+    return {
+      ok: false,
+      queued: false,
+      local_only: false,
+      review_state: "blocked_sensitive",
+      error: guard.error,
+      pattern: guard.pattern,
+      next_action: "Remove raw rows, secrets, or credential-like values before retrying this ChatData write."
+    };
+  }
+
   const queuedAt = new Date().toISOString();
   const queueDir = join(domainCachePath(config.domain), ".queue");
   const safeTool = item.tool.replace(/[^a-z0-9_-]/gi, "-").toLowerCase();
@@ -931,6 +984,28 @@ async function queueLocalWrite(config: ChatDataConfig, item: LocalQueueItem, err
     ...payload,
     queue_path: queuePath
   };
+}
+
+function guardLocalQueueItem(item: LocalQueueItem): { ok: true } | { ok: false; error: string; pattern: string } {
+  const serialized = JSON.stringify(item.body ?? item);
+  const scanText = `${serialized}\n${serialized.replace(/\\n/g, "\n").replace(/\\"/g, '"')}`;
+  const checks: Array<{ pattern: string; regex: RegExp; error: string }> = [
+    { pattern: "row_data_included", regex: /"?row_data_included"?\s*[:=]\s*true/i, error: "Blocked: raw row data marker is not allowed in local queue." },
+    { pattern: "json_row_array", regex: /\[(\s*\{[^}]+\}\s*,?\s*){5,}\]/, error: "Blocked: JSON row arrays are not allowed in local queue." },
+    { pattern: "csv_rows", regex: /^[^,\n]+,[^,\n]+,[^,\n]+\n([^,\n]+,[^,\n]+,[^,\n]+\n){4,}/m, error: "Blocked: CSV-like raw rows are not allowed in local queue." },
+    { pattern: "api_secret", regex: /\b(?:sk-[A-Za-z0-9_-]{20,}|xox[baprs]-[A-Za-z0-9-]{20,}|AKIA[0-9A-Z]{16})\b/, error: "Blocked: secret-looking token is not allowed in local queue." },
+    { pattern: "connection_string", regex: /\b(?:postgres|mysql|mongodb|redis|redshift):\/\/[^:]+:[^@]+@/i, error: "Blocked: connection strings are not allowed in local queue." },
+    { pattern: "password_assignment", regex: /"?(?:api[_-]?key|token|secret|password|credential|passwd|pwd)"?\s*[:=]\s*['"]?\S{8,}/i, error: "Blocked: credential-like assignment is not allowed in local queue." },
+    { pattern: "ssn", regex: /\b\d{3}-\d{2}-\d{4}\b/, error: "Blocked: PII pattern is not allowed in local queue." }
+  ];
+
+  for (const check of checks) {
+    if (check.regex.test(scanText)) {
+      return { ok: false, error: check.error, pattern: check.pattern };
+    }
+  }
+
+  return { ok: true };
 }
 
 function normalizeHubUrl(value: string): string {

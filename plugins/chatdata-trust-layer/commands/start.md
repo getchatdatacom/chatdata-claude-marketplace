@@ -24,10 +24,10 @@ This is the customer-facing feature map. Do not hide the breadth of the plugin. 
 - Setup: `/chatdata:login`, `/chatdata:status`, `/chatdata:update`, `/chatdata:onboarding`, `/chatdata:settings`
 - Catalog: `/chatdata:catalog`, `/chatdata:metrics`, `/chatdata:sync-context`, `/chatdata:audit-context`, `/chatdata:publish-patch`
 - Data connection: `/chatdata:connect-data`, `/chatdata:scan-sources`, `/chatdata:context-bootstrap`, `/chatdata:company-repo`
-- Analysis: `/chatdata:question-framing`, `/chatdata:investigate`, `/chatdata:investigate-metric`, `/chatdata:prepare-wbr`, `/chatdata:write-operating-brief`, `/chatdata:story-and-action`
+- Analysis: `/chatdata:question-framing`, `/chatdata:warehouse-query`, `/chatdata:investigate`, `/chatdata:investigate-metric`, `/chatdata:prepare-wbr`, `/chatdata:write-operating-brief`, `/chatdata:story-and-action`
 - Trust and validation: `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:benchmark`, `/chatdata:build-benchmark`, `/chatdata:but-for-real`
 - Memory and proof: `/chatdata:proof`, `/chatdata:proof-receipts`, `/chatdata:feedback-memory`, `/chatdata:drift-check`, `/chatdata:review-readiness`
-- Build and publish: `/chatdata:bootstrap-repo`, `/chatdata:draft-metric-packet`, `/chatdata:generate-evals`, `/chatdata:create-evals`, `/chatdata:publish-slack-context`
+- Build and publish: `/chatdata:bootstrap-repo`, `/chatdata:draft-metric-packet`, `/chatdata:generate-evals`, `/chatdata:create-evals`, `/chatdata:publish-patch`
 - Account: `/chatdata:license`, `/chatdata:trial-and-privacy`, `/chatdata:activate-session`
 
 4. End with the single best next command for the current state.

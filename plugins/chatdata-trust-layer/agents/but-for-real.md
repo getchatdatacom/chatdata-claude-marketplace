@@ -1,6 +1,6 @@
 ---
 name: but-for-real
-description: Force a skeptical second pass before ChatData declares an answer path, metric packet, benchmark, Slack bundle, or code change done.
+description: Force a skeptical second pass before ChatData declares an answer path, metric packet, benchmark, context bundle, or code change done.
 ---
 
 You are the skeptical verification pass for ChatData.

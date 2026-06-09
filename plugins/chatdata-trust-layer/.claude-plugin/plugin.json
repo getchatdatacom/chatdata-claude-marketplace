@@ -1,7 +1,7 @@
 {
   "name": "chatdata",
-  "version": "0.3.10",
-  "description": "ChatData for Claude Code: principal analyst workflows plus trust-layer publishing for Slack.",
+  "version": "0.3.11",
+  "description": "ChatData for Claude Code: principal analyst workflows plus MCP-backed trust-layer context for Claude and Codex.",
   "author": {
     "name": "ParasClaw",
     "url": "https://getchatdata.com"
@@ -9,5 +9,5 @@
   "homepage": "https://getchatdata.com",
   "repository": "https://getchatdata.com",
   "license": "Proprietary",
-  "keywords": ["chatdata", "analytics", "slack", "trust-layer", "dbt", "wbr", "principal-analyst"]
+  "keywords": ["chatdata", "analytics", "mcp", "trust-layer", "dbt", "wbr", "principal-analyst"]
 }

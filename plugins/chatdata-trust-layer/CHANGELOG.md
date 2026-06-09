@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- added `/chatdata:warehouse-query` plus the built-in `warehouse-query` skill so every install uses metric packets, answer paths, source references, validation, and provenance before raw SQL fallback
+- added customer-owned `skills/customer-analytics-skill.md` and `sources/domain-reference-template.md` to the trust-layer repo template
+- bumped the plugin manifest to `0.3.11` so Claude Code can detect the warehouse-query routing update
 - restored `/chatdata:start`, `/chatdata:login`, and a broader picker-visible command catalog for customer onboarding
 - added a `/chatdata:catalog` guide for using the AI-native data catalog, review queue, metrics, evidence, and sync workflows
 - added customer-friendly command aliases for metrics, investigation, validation, benchmarks, evals, proof receipts, settings, trial/privacy, source connection, and context bootstrap
