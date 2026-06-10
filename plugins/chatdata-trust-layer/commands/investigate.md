@@ -8,4 +8,4 @@ Alias for `/chatdata:investigate-metric`.
 
 Use this when the customer asks a business question such as "why did conversion drop?" or "which segment drove pipeline?"
 
-Start with `/chatdata:warehouse-query` when the request needs warehouse, BI, dashboard, SQL, or recurring metric context. Then run the full metric investigation workflow, including MCP doctor, context pull, question framing, evidence, validation, caveats, and sync/proof recommendation.
+Start with `/chatdata:warehouse-query` when the request needs warehouse, BI, dashboard, SQL, or recurring metric context. Then run the full metric investigation workflow, including MCP doctor, context pull, decision framing, grounded anchors, candidate frames, disconfirming evidence, validation, caveats, tripwires, and sync/proof recommendation.

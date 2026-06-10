@@ -168,9 +168,9 @@ Context file tools accept only relative Markdown paths like `metrics/activation-
 
 Use `chatdata_create_metric_card` only for metric definitions: counts, rates, amounts, or status metrics with explicit grain, owner, source, raw SQL SoT when present, verified dashboard/report SoT when present, freshness, caveats, business context, uncertainty policy, and validation rules. Put playbooks, attribution routing, source stacks, evals, decisions, and answer paths in their matching context folders instead of `metrics/`.
 
-For recurring answers, `chatdata_save_answer_path` should include the canonical question, answer state, metric id, SQL or retrieval path, raw SQL SoT usage, verified dashboard/report tie-out, business-context check, validation rule, uncertainty policy, caveats, and reuse rule.
+For recurring answers, `chatdata_save_answer_path` should include the canonical question, answer state, metric id, SQL or retrieval path, raw SQL SoT usage, verified dashboard/report tie-out, business-context check, decision, grounded anchors, current frame, disconfirming evidence, alternate frames, tripwires, validation rule, uncertainty policy, caveats, action implications, and reuse rule.
 
-For proof receipts, `chatdata_create_proof_receipt` should include the answer state, evidence checked, source path, raw SQL SoT or verified dashboard/report tie-out, validation result, business-context check, uncertainty or validation interval, caveats, and next action.
+For proof receipts, `chatdata_create_proof_receipt` should include the answer state, evidence checked, source path, raw SQL SoT or verified dashboard/report tie-out, validation result, business-context check, decision, grounded anchors, committed frame, disconfirming evidence, alternate frames tested, tripwires, uncertainty or validation interval, caveats, action implications, and next action.
 
 Structured writes and proposed patches run through ChatData CDO pre-review before they become publishable human-review work. The response may include `cdo_pre_review`; if its decision is `needs_rewrite`, fix the required rewrites before asking a governance reviewer to approve the patch.
 

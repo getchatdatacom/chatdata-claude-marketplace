@@ -22,6 +22,14 @@ Then follow its source order:
 6. source reference and customer business context
 7. raw SQL fallback only after the trusted route cannot answer
 
+For exploratory questions, require the sensemaking loop before broad SQL:
+
+- start with the decision the answer supports
+- identify 3-4 grounded anchors from approved context or actual observed data
+- propose 2-3 possible frames
+- use narrow queries or artifact checks to test the frames
+- name disconfirming evidence, what the kept frame still cannot explain, and the tripwires that should reopen the analysis
+
 If the customer owns a trust-layer repo, also read `skills/customer-analytics-skill.md` and the relevant `sources/*.md` reference before querying.
 
 Required output:
@@ -29,6 +37,7 @@ Required output:
 - direct answer or one clarifying question
 - source route used
 - validation or tie-out performed
+- frame, anchors, alternate frames, and disconfirming evidence when exploratory
 - confidence and uncertainty footer
 - context gap to save, if any
 - next ChatData write or proof command

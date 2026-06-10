@@ -10,6 +10,26 @@ Use this skill as ChatData's default routing contract for analytics questions.
 
 The job is to make Claude Code and Codex use the same trusted route: approved metric packets first, reviewed answer paths next, source references and owner context next, and raw exploration only when the approved layer cannot answer the question.
 
+## Exploratory Sensemaking Contract
+
+For exploratory or causal questions, do not start with SQL. Start with the decision the user is trying to make.
+
+Before broad querying:
+
+1. Identify 3-4 grounded anchors from approved context, dashboard artifacts, source references, query results, or observable metric behavior.
+2. Propose 2-3 possible explanatory frames. Keep them narrative and causal, not just lists of metrics.
+3. For each frame, state:
+   - what evidence would support it
+   - what evidence would break it
+   - what the frame still would not explain
+   - the narrow query, dashboard check, or source read needed to test it
+4. Run only the minimal query or artifact check needed to test the active frame.
+5. Carry disconfirming evidence forward. If the data breaks the frame, reframe before concluding.
+6. Commit only when the chosen frame fits the evidence better than the serious alternatives, then name tripwires that should reopen the analysis.
+7. Convert the frame into action implications: analysis to operationalize it, metric or source updates to make it reusable, and candidate experiments or playbooks that follow from the frame.
+
+Do not invent tables, columns, joins, metrics, or frames that are not grounded in approved workspace context or observed data. If something is not visible, mark it unknown.
+
 ## Source Order
 
 Run this order before writing SQL or answering:
@@ -77,6 +97,16 @@ Every stakeholder-facing numeric answer needs a validation pass:
 
 For restricted fields or row-level personal data, return SQL or a validation plan for the customer to run. Do not paste raw rows into chat, proof receipts, local queues, or MCP context.
 
+## Frame Stress Test
+
+Before finalizing an exploratory answer:
+
+- classify anomalies as dismissible, concerning, or frame-breaking
+- compare the chosen frame against at least one alternate frame when evidence is mixed
+- state what the frame cannot explain
+- name specific tripwires for reopening the analysis
+- downgrade to `needs_analyst_review` if a serious anomaly cannot be explained without changing the frame
+
 ## Required Footer
 
 End every analytics answer with a compact footer:
@@ -92,4 +122,4 @@ If any footer field is missing, name the missing context and recommend the small
 
 ## Sync Rule
 
-If the work teaches ChatData a reusable definition, caveat, source route, date convention, entity disambiguation, benchmark, or answer path, save it through MCP or propose a reviewed patch. A useful answer that stays only in chat is incomplete.
+If the work teaches ChatData a reusable definition, caveat, source route, date convention, entity disambiguation, benchmark, frame, tripwire, or answer path, save it through MCP or propose a reviewed patch. A useful answer that stays only in chat is incomplete.

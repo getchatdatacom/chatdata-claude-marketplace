@@ -491,6 +491,16 @@ server.tool(
     business_context_check: z.string().optional(),
     uncertainty_policy: z.string().optional(),
     caveats: z.string().optional(),
+    decision: z.string().optional(),
+    anchors: z.array(z.string()).optional(),
+    current_frame: z.string().optional(),
+    frame_explains: z.string().optional(),
+    frame_cannot_explain: z.string().optional(),
+    disconfirming_evidence: z.string().optional(),
+    alternate_frames: z.array(z.string()).optional(),
+    frame_decision: z.string().optional(),
+    tripwires: z.string().optional(),
+    action_implications: z.string().optional(),
     reuse_rule: z.string().optional()
   },
   async (input) => {
@@ -527,7 +537,17 @@ server.tool(
     freshness: z.string().optional(),
     validation: z.string().optional(),
     business_context_check: z.string().optional(),
-    uncertainty: z.string().optional()
+    uncertainty: z.string().optional(),
+    decision: z.string().optional(),
+    anchors: z.array(z.string()).optional(),
+    current_frame: z.string().optional(),
+    frame_explains: z.string().optional(),
+    frame_cannot_explain: z.string().optional(),
+    disconfirming_evidence: z.string().optional(),
+    alternate_frames: z.array(z.string()).optional(),
+    frame_decision: z.string().optional(),
+    tripwires: z.string().optional(),
+    action_implications: z.string().optional()
   },
   async (input) => {
     const config = await requireConfig();

@@ -6,7 +6,7 @@ description: Record a ChatData proof receipt for an install, trusted answer, ben
 
 Use this command to record evidence that a ChatData workflow worked, failed, or needs review. Common proofs include install success, first trusted answer, benchmark tie-out, context sync, review queue cleanup, and design-partner demo readiness.
 
-Proof receipts should be short and reusable. Record the claim, evidence, result, confidence, and remaining risk. Do not paste long inventories or raw files unless the proof depends on that exact excerpt.
+Proof receipts should be short and reusable. Record the claim, evidence, result, confidence, frame, and remaining risk. Do not paste long inventories or raw files unless the proof depends on that exact excerpt.
 
 First use the ChatData MCP server and run `chatdata_doctor`.
 
@@ -26,6 +26,14 @@ Build a proof receipt with the facts the user supplied or the command observed:
 - workflow name
 - question or task
 - answer state: `answered`, `clarification_needed`, `needs_analyst_review`, or `refused`
+- decision the answer supports
+- 3-4 grounded anchors
+- current or final explanatory frame
+- what the frame explains
+- what the frame cannot explain
+- disconfirming evidence or alternate frames tested
+- tripwires that should reopen the analysis
+- action implications
 - linked metric id when applicable
 - source path used
 - raw SQL SoT used, or explicit `not available`
@@ -54,6 +62,7 @@ Required output:
 - context pull status
 - proof receipt id or path
 - result and confidence
+- frame and tripwires, if relevant
 - evidence checked
 - pending review count
 - remaining risk or next command
