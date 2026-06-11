@@ -15,6 +15,7 @@ Sequence:
 3. Run the smallest useful verification:
    - metric packet validation
    - benchmark query or dashboard tie-out check
+   - frame-trail check for exploratory answers: anchors, disconfirming evidence, alternate frames, tripwires, and action implications
    - recurring-question eval
    - drift check
    - context publish dry run
@@ -28,6 +29,7 @@ Required output:
 - verdict: `proved`, `partially proved`, or `not proved`
 - proof checked
 - likely failure still possible
+- frame trail status when the claim includes an exploratory answer
 - smallest next fix or verification step
 
 Do not present confidence as evidence. The proof has to be visible.

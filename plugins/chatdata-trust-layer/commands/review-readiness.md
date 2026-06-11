@@ -17,11 +17,12 @@ The summary should show:
 - duplicate or conflicting definitions, sources, answer paths, or owner rules
 - missing owner or benchmark coverage
 - skeptical second-pass status for any path being called ready
+- frame-trail coverage for exploratory answer paths: decision, anchors, disconfirming evidence, alternate frames, tripwires, and action implications
 - open CDO pre-review or steward blockers that must be rewritten, merged, rejected, or published
 
 Keep the output compact and operational.
 
-If a path has not passed a current validation, benchmark, drift, or eval check, do not call it ready. Mark it `partially proved` or `not proved` and name the proof still missing.
+If a path has not passed a current validation, benchmark, drift, eval, or frame-trail check, do not call it ready. Mark it `partially proved` or `not proved` and name the proof still missing.
 
 Never call pending context trusted. A path becomes trusted only after it is approved/published and appears in `chatdata_pull_context` without `include_drafts`.
 

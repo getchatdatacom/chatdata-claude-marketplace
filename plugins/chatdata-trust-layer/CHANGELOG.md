@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- bumped the plugin manifest to `0.3.14` to move the exploratory frame contract into the default active ChatData harness and validation commands, not only `/chatdata:warehouse-query`
 - bumped the plugin manifest to `0.3.13` for the exploratory sensemaking contract across question framing, investigation, warehouse-query routing, proof receipts, and MCP answer-path writes
 - bumped the plugin manifest to `0.3.12` after post-deploy QA found template query references and Codex package sync gaps in the `0.3.11` payload
 - added `/chatdata:warehouse-query` plus the built-in `warehouse-query` skill so every install uses metric packets, answer paths, source references, validation, and provenance before raw SQL fallback

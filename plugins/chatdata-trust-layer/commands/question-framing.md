@@ -25,4 +25,4 @@ For exploratory mode, start with the business decision before SQL:
 
 Then route to `/chatdata:investigate-metric`, `/chatdata:prepare-wbr`, or `/chatdata:metrics`.
 
-If the question requires warehouse, BI, dashboard, SQL, or recurring KPI context, route to `/chatdata:warehouse-query` before analysis so the session checks metric packets, answer paths, source references, and provenance before raw SQL fallback.
+If the question requires warehouse, BI, dashboard, SQL, or recurring KPI context, apply the same source-routing harness by default: check metric packets, answer paths, source references, and provenance before raw SQL fallback. Use `/chatdata:warehouse-query` when the user explicitly asks for manual source routing or when the route itself needs inspection.

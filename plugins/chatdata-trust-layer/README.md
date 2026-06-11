@@ -48,11 +48,13 @@ Default loop:
 1. Run `chatdata_doctor` before stakeholder-facing analysis, sync, proof, review, or publish work.
 2. Run `chatdata_pull_context` before answering so the session uses the latest approved context and local cache.
 3. Use `chatdata_search_context` or `chatdata_read_context_file` for the specific metric, source, answer path, proof receipt, or caveat. Do not dump full inventories unless the user asks.
-4. Answer with a compact trust label and the evidence that actually matters.
-5. If the work created reusable business knowledge, run the smallest write tool: `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or `chatdata_propose_patch`.
-6. Run `/chatdata:audit-context` or `/chatdata:proof` before calling the result trusted, ready, reusable, or fixed.
+4. For any exploratory analytics question, apply the frame trail by default: decision, 3-4 grounded anchors, candidate frames, disconfirming evidence, alternate-frame test, committed frame or downgrade, tripwires, and action implications.
+5. Answer with a compact trust label and the evidence that actually matters.
+6. If the work created reusable business knowledge, run the smallest write tool: `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or `chatdata_propose_patch`.
+7. Run `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:but-for-real`, `/chatdata:audit-context`, or `/chatdata:proof` before calling the result trusted, ready, reusable, or fixed.
 
 This is how audit and sync stay coupled: audit proves the context can be trusted; sync saves new reusable context back into the hub. A successful investigation that does not sync its corrected definition, answer path, caveat, or proof receipt is incomplete.
+The user should not need to invoke `/chatdata:warehouse-query` to get this behavior. When ChatData is active and the user asks an analytics question, the default principal analyst harness routes through the same context, frame, validation, and proof gates.
 
 ## Shared Onboarding Loop
 
@@ -80,11 +82,12 @@ Those patches create shared context for the onboarding packet, source inventory,
 
 The plugin encodes the working standard from the current `ai-analyst-lab/ai-analyst` and `parasdoshicom/ai-plus-data` references:
 
-- question framing: start with the decision, metric, grain, period, segment, and hypothesis before writing queries or summaries
+- question framing: start with the decision, metric, grain, period, segment, grounded anchors, and candidate explanatory frames before writing queries or summaries
 - metric trust packets: official definition, owner, grain, source, raw SQL SoT when present, verified dashboard/report SoT, business context, freshness, caveats, validation rules, approved answer paths, and eval questions
 - source tie-out: compare generated answers to blessed dashboard/model/raw-SQL/report totals and stop when foundational numbers do not match
 - business-context pass: compare the claim against the customer's company type, revenue model, segment logic, operating cadence, and expected metric behavior
 - validation pass: rederive key numbers, check arithmetic, compare against expected ranges, inspect joins/filters, and name confidence
+- frame-validation pass: require the current frame, supporting anchors, disconfirming evidence, alternate frames tested, tripwires, and action implications for exploratory answers
 - uncertainty pass: attach a statistical confidence interval, deterministic validation interval, or explicit `not available` state for every numeric answer
 - self-correcting SQL loop: state assumptions, run the query, inspect errors or surprises, revise, then validate the final answer
 - answer memory: save recurring, owner-reviewed paths so the next user gets the trusted route instead of another bespoke analysis

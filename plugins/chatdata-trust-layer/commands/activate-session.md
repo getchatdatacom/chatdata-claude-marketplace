@@ -18,5 +18,6 @@ Then report:
 - context count or blank-workspace state
 - pending review risk
 - best next command
+- default harness status: ChatData active means analytics questions use MCP context, frame trail, validation, proof, and sync gates without requiring the user to invoke `/chatdata:warehouse-query`
 
 Route blank workspaces to `/chatdata:onboarding`; healthy recurring-analysis sessions to `/chatdata:start`, `/chatdata:investigate-metric`, or `/chatdata:prepare-wbr`.

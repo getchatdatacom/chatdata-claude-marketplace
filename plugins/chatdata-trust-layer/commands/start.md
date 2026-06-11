@@ -19,7 +19,9 @@ This is the customer-facing feature map. Do not hide the breadth of the plugin. 
    - If approved context exists, mention the rough families available: metrics, sources, answer paths, evidence, playbooks, decisions, evals, and proof receipts.
    - If the workspace is blank, route to `/chatdata:onboarding`.
 
-3. Show the full command catalog:
+3. State the default harness rule: when ChatData is active, exploratory analytics questions automatically use MCP context, grounded anchors, frame trail, validation, proof, and sync gates. Users should not need to invoke `/chatdata:warehouse-query` for the normal trusted-answer path. `/chatdata:warehouse-query` remains the explicit source-routing command when someone wants to inspect warehouse, BI, dashboard, SQL, or recurring KPI routing.
+
+4. Show the full command catalog:
 
 - Setup: `/chatdata:login`, `/chatdata:status`, `/chatdata:update`, `/chatdata:onboarding`, `/chatdata:settings`
 - Catalog: `/chatdata:catalog`, `/chatdata:metrics`, `/chatdata:sync-context`, `/chatdata:audit-context`, `/chatdata:publish-patch`
@@ -30,13 +32,14 @@ This is the customer-facing feature map. Do not hide the breadth of the plugin. 
 - Build and publish: `/chatdata:bootstrap-repo`, `/chatdata:draft-metric-packet`, `/chatdata:generate-evals`, `/chatdata:create-evals`, `/chatdata:publish-patch`
 - Account: `/chatdata:license`, `/chatdata:trial-and-privacy`, `/chatdata:activate-session`
 
-4. End with the single best next command for the current state.
+5. End with the single best next command for the current state.
 
 ## Required Output
 
 - one-line ChatData purpose
 - workspace and MCP status
 - catalog state: approved context, blank workspace, or blocked
+- default harness status
 - grouped command catalog
 - best next command
 - support route: `support@getchatdata.com`
