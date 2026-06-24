@@ -4,7 +4,7 @@ description: Pull ChatData context and save reviewed metric, answer-path, proof,
 
 # Sync Context
 
-Use this command when a design partner has new or corrected context that should become reusable ChatData trust-layer state.
+Use this command when a customer workflow has new or corrected context that should become reusable ChatData trust-layer state.
 
 Use this after any analysis that created reusable definitions, frames, tripwires, caveats, validation checks, proof receipts, or answer paths. A useful correction that stays only in the chat transcript has not been synced.
 
@@ -24,10 +24,11 @@ Then use the ChatData MCP server and run `chatdata_pull_context`.
 
 Choose the smallest MCP write for the update:
 
+- Use `chatdata_record_session_context` for reusable session/query context, especially when the session discovered a correction, caveat, frame, or next route that should not live only in the transcript.
 - Use `chatdata_create_metric_card` only for an actual metric card: count, rate, amount, or status definition with grain, owner, source, raw SQL SoT or verified dashboard/report SoT when present, freshness rule, caveat, business-context note, and validation rule.
 - Do not use metric cards for playbooks, routing rules, attribution decision logic, source stacks, evals, decisions, or answer paths. Use `chatdata_save_answer_path` for recurring questions and routes; use `chatdata_propose_patch` under `playbooks/`, `sources/`, `evals/`, or `decisions/` for broader shared guidance.
 - Use `chatdata_save_answer_path` to submit a recurring question, canonical route, SQL or retrieval path, raw SQL SoT usage, verified dashboard/report tie-out, business-context check, frame, tripwires, validation check, caveat, and reuse rule to human review.
-- Use `chatdata_create_proof_receipt` to submit install proof, design-partner workflow proof, benchmark tie-out proof, first trusted answer proof, or frame-stress-test proof to human review.
+- Use `chatdata_create_proof_receipt` to submit install proof, customer workflow proof, benchmark tie-out proof, first trusted answer proof, or frame-stress-test proof to human review.
 - Use a patch tool such as `chatdata_propose_patch` when an existing markdown artifact needs review before publication.
 
 After writing, use the ChatData MCP server and run `chatdata_list_review_queue`.

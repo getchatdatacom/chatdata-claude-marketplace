@@ -1,6 +1,6 @@
 # ChatData For Claude Code
 
-ChatData for Claude Code is the plugin-first wedge for ChatData.
+ChatData for Claude Code is the companion setup and operator workbench for the ChatData MCP trust layer.
 
 It supports two modes with the same core:
 
@@ -9,18 +9,18 @@ It supports two modes with the same core:
 2. `Builder mode`
    An analytics engineer or data owner uses the same plugin to bootstrap the trust-layer repo, draft metric packets, publish reviewed MCP context, and keep reviewed answer paths visible instead of burying them in chat transcripts.
 
-This is one product, not two disconnected plugins. The active product is the Claude plugin plus MCP-backed context for Claude-native and Codex-native workflows. Slack is a later expansion surface.
+This is one product, not two disconnected surfaces. The active product is the MCP trust layer for Claude Code, Codex, Cursor, OpenClaw, and other MCP-capable clients. The Claude plugin exists to make setup, review, evals, and local trust work faster. Slack is a later expansion surface.
 
-## Why This Should Be A Plugin
+## Why This Plugin Still Exists
 
 This is worth being a plugin because it can:
 
-- deliver value to one operator before an admin-heavy workspace rollout exists
+- accelerate one operator before an admin-heavy workspace rollout exists
 - package builder workflows like bootstrap, scan, draft, publish, and drift checks into installable commands
 - use cross-session state, stronger retrieval, and batching for exploratory or file-heavy work
-- give every MCP client the same reviewed trust layer instead of making each client rebuild context alone
+- make proof receipt review, saved-path editing, and local artifact maintenance easier than plain MCP config
 
-The discipline is important: keep metric packets, reviewed answer paths, and evals readable and customer-owned. The plugin is the leverage layer, not the only copy of business logic.
+The discipline is important: keep metric packets, proof receipts, reviewed answer paths, and evals readable, MCP-backed, and customer-owned. The plugin is the leverage layer, not the product center or the only copy of business logic.
 
 When a customer or internal stack already has a strong metadata substrate, such as Data Hub, the plugin should use that layer for catalog, lineage, ownership, and discovery context instead of recreating those primitives locally.
 
@@ -50,11 +50,14 @@ Default loop:
 3. Use `chatdata_search_context` or `chatdata_read_context_file` for the specific metric, source, answer path, proof receipt, or caveat. Do not dump full inventories unless the user asks.
 4. For any exploratory analytics question, apply the frame trail by default: decision, 3-4 grounded anchors, candidate frames, disconfirming evidence, alternate-frame test, committed frame or downgrade, tripwires, and action implications.
 5. Answer with a compact trust label and the evidence that actually matters.
-6. If the work created reusable business knowledge, run the smallest write tool: `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or `chatdata_propose_patch`.
-7. Run `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:but-for-real`, `/chatdata:audit-context`, or `/chatdata:proof` before calling the result trusted, ready, reusable, or fixed.
+6. If the work created reusable business knowledge, run the smallest write tool: `chatdata_record_session_context`, `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or `chatdata_propose_patch`.
+7. Run `chatdata_run_context_steward` and `chatdata_list_review_queue` after MCP writes so duplicate context and pending review are visible.
+8. Run `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:but-for-real`, `/chatdata:audit-context`, or `/chatdata:proof` before calling the result trusted, ready, reusable, or fixed.
 
 This is how audit and sync stay coupled: audit proves the context can be trusted; sync saves new reusable context back into the hub. A successful investigation that does not sync its corrected definition, answer path, caveat, or proof receipt is incomplete.
 The user should not need to invoke `/chatdata:warehouse-query` to get this behavior. When ChatData is active and the user asks an analytics question, the default principal analyst harness routes through the same context, frame, validation, and proof gates.
+
+The optional Claude Code plugin ships a session hook in `hooks/hooks.json`. The hook does not replace MCP tools; it reminds Claude Code at session start and after context reads that ChatData MCP is read-write, stale five-tool sessions need a restart/reconnect, and reusable session/query context should be written back through MCP. Cursor, Codex, and other MCP clients get the same contract through `chatdata_agent_context`, `chatdata_list_guidance`, and `chatdata_read_guidance`.
 
 ## Shared Onboarding Loop
 
@@ -181,7 +184,13 @@ CHATDATA_REPO="${CHATDATA_REPO:-$HOME/Documents/ChatData}"
 "$CHATDATA_REPO/scripts/package_chatdata_products.sh" https://api.getchatdata.com
 ```
 
-That script creates a plugin zip and a trust-repo template zip under `dist/chatdata-products/`. Any Slack manifest output is later-stage packaging, not the active product path.
+That script creates a plugin zip and a trust-repo template zip under `dist/chatdata-products/`. Slack manifest output is later-stage packaging, not the active product path.
+
+Slack manifest packaging is opt-in:
+
+```bash
+"$CHATDATA_REPO/scripts/package_chatdata_products.sh" https://api.getchatdata.com --include-slack
+```
 
 ## Update
 
@@ -208,7 +217,7 @@ Then run `/reload-plugins` or restart Claude Code, followed by `/chatdata:status
 
 ### Principal analyst mode
 
-Use the plugin when one person needs principal-level data science without waiting on a full team workflow.
+Use the plugin when one person needs principal-level data science, local scaffolding, or review workflows beyond plain MCP access.
 
 Typical outputs:
 
@@ -220,7 +229,7 @@ Typical outputs:
 
 ### Builder mode
 
-Use the same plugin when you are creating or maintaining the trust layer that powers Claude/Codex MCP workflows.
+Use the same plugin when you are creating or maintaining the trust layer that powers MCP-capable client workflows.
 
 Typical outputs:
 

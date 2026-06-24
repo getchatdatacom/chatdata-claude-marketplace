@@ -12,6 +12,7 @@ First use the ChatData MCP server and run `chatdata_doctor`.
 
 - If the tool is unavailable, stop and say: "ChatData MCP is not connected. Install or repair the MCP from ChatData Settings, restart Claude Code, then rerun `/chatdata:status`."
 - If `chatdata_doctor` reports config, consent, token, workspace, or hub errors, stop and show the exact failing check plus the next install or repair action.
+- If `chatdata_doctor` does not report `read_only: false` and `required_write_tools_present: true`, say the session is using a stale ChatData MCP tool cache or old package. Tell the user to restart or reconnect Claude Code, then rerun `/chatdata:status`.
 - If the connected domain is not the intended customer workspace, stop and have the user copy the terminal setup command from the correct ChatData workspace before any analysis or sync.
 - If healthy, continue.
 

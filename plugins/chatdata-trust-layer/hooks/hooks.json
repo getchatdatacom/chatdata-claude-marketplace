@@ -1,0 +1,29 @@
+{
+  "description": "ChatData MCP session writeback reminders for Claude Code.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/scripts/chatdata-session-hook.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__chatdata__chatdata_pull_context|mcp__chatdata__chatdata_search_context|mcp__chatdata__chatdata_read_context_file|chatdata_pull_context|chatdata_search_context|chatdata_read_context_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/scripts/chatdata-session-hook.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- bumped the plugin manifest to `0.3.15` and added Claude Code session hooks that remind active sessions to use read-write MCP, write reusable session/query context back through MCP, and run steward/review checks after writes
 - bumped the plugin manifest to `0.3.14` to move the exploratory frame contract into the default active ChatData harness and validation commands, not only `/chatdata:warehouse-query`
 - bumped the plugin manifest to `0.3.13` for the exploratory sensemaking contract across question framing, investigation, warehouse-query routing, proof receipts, and MCP answer-path writes
 - bumped the plugin manifest to `0.3.12` after post-deploy QA found template query references and Codex package sync gaps in the `0.3.11` payload

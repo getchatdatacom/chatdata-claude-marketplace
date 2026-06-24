@@ -6,6 +6,16 @@ import { dirname, join, relative } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import {
+  artifactTypeFromPath,
+  extractTrustReceiptFields,
+  listGuidance,
+  readGuidance,
+  renderAgentContext,
+  type AgentSurface,
+  type GuidanceKind,
+  type TrustReceiptSummary
+} from "./guidance.js";
 
 interface ChatDataConfig {
   token: string;
@@ -62,6 +72,21 @@ interface ContextWriteResult {
   cached: LocalContextFileSummary[];
 }
 
+interface LocalArtifactManifestResult {
+  ok: boolean;
+  generated_at: string;
+  domain: string | null;
+  cache_path: string;
+  artifact_manifest_path: string;
+  metadata_only: true;
+  raw_rows_included: false;
+  artifact_count: number;
+  artifacts: TrustReceiptSummary[];
+  review_state?: "blocked_sensitive";
+  error?: string;
+  pattern?: string;
+}
+
 interface LocalQueueItem {
   tool: string;
   path: string;
@@ -91,11 +116,15 @@ class HubHttpError extends Error {
 const configPath = join(process.env.CHATDATA_CONFIG_DIR ?? join(homedir(), ".chatdata"), "config.json");
 const cachePath = join(dirname(configPath), "context");
 const defaultHubUrl = process.env.CHATDATA_HUB_URL ?? "https://getchatdata.com/api";
+const mcpClientSurface = detectMcpClientSurface();
 
 const server = new McpServer({
   name: "chatdata",
   version: "0.1.0"
 });
+const guidanceKindSchema = z.enum(["template", "skill", "rule", "runbook", "all"]);
+const agentSurfaceSchema = z.enum(["claude-code", "codex", "generic"]);
+const artifactTypeSchema = z.enum(["metric", "answer_path", "proof_receipt", "trusted_artifact", "all"]);
 
 server.tool("chatdata_status", "Read local ChatData MCP config and show workspace connection state.", {}, async () => {
   const configResult = await readConfigResult();
@@ -108,6 +137,7 @@ server.tool("chatdata_status", "Read local ChatData MCP config and show workspac
     config_readable: configResult.config_readable,
     config_path: configPath,
     cache_path: cachePath,
+    mcp_client_surface: mcpClientSurface,
     workspace_id: config?.workspace_id ?? null,
     domain: config?.domain ?? null,
     hub_url: config?.hub_url ?? defaultHubUrl,
@@ -118,6 +148,54 @@ server.tool("chatdata_status", "Read local ChatData MCP config and show workspac
     next_action: configResult.error ? configRepairNextAction() : null
   });
 });
+
+server.tool(
+  "chatdata_list_guidance",
+  "List bundled ChatData guidance ids without returning full guidance bodies.",
+  {
+    kind: guidanceKindSchema.optional()
+  },
+  async ({ kind }) => text(listGuidance(kind as GuidanceKind | "all" | undefined))
+);
+
+server.tool(
+  "chatdata_read_guidance",
+  "Read one bundled, non-secret ChatData guidance document by id.",
+  {
+    id: z.string().min(1)
+  },
+  async ({ id }) => {
+    const guidance = readGuidance(id);
+
+    if (!guidance) {
+      return text({
+        ok: false,
+        error: "Guidance not found.",
+        id,
+        available: listGuidance().map((item) => item.id)
+      });
+    }
+
+    return text(guidance);
+  }
+);
+
+server.tool(
+  "chatdata_agent_context",
+  "Return compact surface-specific ChatData agent context and available guidance ids.",
+  {
+    surface: agentSurfaceSchema.optional()
+  },
+  async ({ surface }) => {
+    const resolvedSurface = (surface ?? mcpClientSurface) as AgentSurface;
+
+    return text({
+      surface: resolvedSurface,
+      markdown: renderAgentContext(resolvedSurface),
+      available_guidance: listGuidance()
+    });
+  }
+);
 
 server.tool(
   "chatdata_activate",
@@ -207,6 +285,7 @@ server.tool(
     const checks: Record<string, unknown> = {
       config_path: configPath,
       cache_path: cachePath,
+      mcp_client_surface: mcpClientSurface,
       domain: config.domain,
       expected_domain: expectedDomain ?? null,
       domain_match: expectedDomain ? true : null,
@@ -281,7 +360,7 @@ server.tool(
     const query = revision ? `?since_revision=${encodeURIComponent(revision)}` : "";
     const response = (await hubFetch(config, `/context/pull${query}`)) as ContextPullResponse;
     const targetDir = domainCachePath(config.domain);
-    const contextFiles = await writeContextFiles(targetDir, response.files ?? [], !revision);
+    const contextFiles = await writeContextFiles(targetDir, response.files ?? [], !revision, config.domain);
 
     config.last_pull_revision = response.revision ?? config.last_pull_revision ?? null;
     await writeConfig(config);
@@ -304,6 +383,102 @@ server.tool(
       files: contextFiles.cached,
       last_pull_revision: config.last_pull_revision
     });
+  }
+);
+
+server.tool(
+  "chatdata_list_local_artifacts",
+  "List derived local proof artifacts from the approved cache without raw rows or credential-like values.",
+  {
+    type: artifactTypeSchema.optional()
+  },
+  async ({ type }) => {
+    const config = await requireConfig();
+    const manifest = await buildLocalArtifactManifest(domainCachePath(config.domain), config.domain);
+    const filteredArtifacts = type && type !== "all"
+      ? manifest.artifacts.filter((artifact) => artifact.type === type)
+      : manifest.artifacts;
+
+    return text({
+      ...manifest,
+      artifacts: filteredArtifacts,
+      artifact_count: filteredArtifacts.length
+    });
+  }
+);
+
+server.tool(
+  "chatdata_read_local_artifact",
+  "Export structured proof receipt fields for one cached context artifact without returning raw rows.",
+  {
+    path: z.string().min(1)
+  },
+  async ({ path }) => {
+    if (!isSafeContextPath(path)) {
+      return text(invalidContextPathResponse(path));
+    }
+
+    const artifactType = artifactTypeFromPath(path);
+    if (!artifactType) {
+      return text({
+        ok: false,
+        error: "Path is not a supported local artifact path.",
+        path,
+        supported_prefixes: ["metrics/", "answer-paths/", "proof/", "artifacts/", "trusted-artifacts/"]
+      });
+    }
+
+    const config = await requireConfig();
+    const targetDir = domainCachePath(config.domain);
+    const manifestEntries = await readManifestEntries(targetDir);
+    if (!manifestEntries.has(path)) {
+      return text({
+        ok: false,
+        error: "Local artifact is not present in the approved cache manifest. Run chatdata_pull_context before exporting it.",
+        path
+      });
+    }
+
+    const localPath = join(targetDir, path);
+
+    try {
+      const content = await readFile(localPath, "utf8");
+      const receipt = extractTrustReceiptFields({ path, content });
+      const guard = guardLocalQueueItem({
+        tool: "chatdata_read_local_artifact",
+        path,
+        method: "READ",
+        body: receipt
+      });
+
+      if (!guard.ok) {
+        return text({
+          ok: false,
+          local_only: true,
+          review_state: "blocked_sensitive",
+          error: guard.error,
+          pattern: guard.pattern,
+          next_action: "Remove raw rows, secrets, or credential-like values from this approved context artifact before exporting it."
+        });
+      }
+
+      return text({
+        ok: true,
+        local_path: localPath,
+        receipt
+      });
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+        return text({
+          ok: false,
+          error: "Local artifact not found. Run chatdata_pull_context first.",
+          path,
+          local_path: localPath
+        });
+      }
+
+      throw error;
+    }
   }
 );
 
@@ -420,7 +595,7 @@ server.tool(
     const config = await requireConfig();
     const response = await hubFetch(config, `/context/patch/${encodeURIComponent(patch_id)}/publish`, { method: "POST" });
     const pull = (await hubFetch(config, "/context/pull")) as ContextPullResponse;
-    const contextFiles = await writeContextFiles(domainCachePath(config.domain), pull.files ?? []);
+    const contextFiles = await writeContextFiles(domainCachePath(config.domain), pull.files ?? [], false, config.domain);
     config.last_pull_revision = pull.revision ?? config.last_pull_revision ?? null;
     await writeConfig(config);
 
@@ -513,6 +688,51 @@ server.tool(
       path: "/context/answer-paths",
       method: "POST",
       body: input
+    }));
+  }
+);
+
+server.tool(
+  "chatdata_record_session_context",
+  "Submit session or query context back to ChatData as a reviewable proof receipt.",
+  {
+    id: z.string().optional(),
+    session_id: z.string().optional(),
+    title: z.string().optional(),
+    question: z.string().optional(),
+    summary: z.string().min(1),
+    answer_state: z.enum(["answered", "clarification_needed", "needs_analyst_review", "refused"]).optional(),
+    source: z.string().optional(),
+    metric_id: z.string().optional(),
+    evidence_checked: z.array(z.string()).optional(),
+    context_delta: z.string().optional(),
+    raw_sql_sot: z.string().optional(),
+    verified_dashboard_sot: z.string().optional(),
+    verified_report_sot: z.string().optional(),
+    validation: z.string().optional(),
+    freshness: z.string().optional(),
+    business_context_check: z.string().optional(),
+    uncertainty: z.string().optional(),
+    current_frame: z.string().optional(),
+    anchors: z.array(z.string()).optional(),
+    disconfirming_evidence: z.string().optional(),
+    alternate_frames: z.array(z.string()).optional(),
+    tripwires: z.string().optional(),
+    action_implications: z.string().optional(),
+    caveats: z.string().optional(),
+    next_action: z.string().optional()
+  },
+  async (input) => {
+    const config = await requireConfig();
+    const proofInput = sessionContextProofInput(input);
+    return text(await hubFetchOrQueue(config, "/context/proof", {
+      method: "POST",
+      body: JSON.stringify(proofInput)
+    }, {
+      tool: "chatdata_record_session_context",
+      path: "/context/proof",
+      method: "POST",
+      body: proofInput
     }));
   }
 );
@@ -651,6 +871,85 @@ const transport = new StdioServerTransport();
 await autoPullOnStart();
 await server.connect(transport);
 
+function sessionContextProofInput(input: {
+  id?: string;
+  session_id?: string;
+  title?: string;
+  question?: string;
+  summary: string;
+  answer_state?: "answered" | "clarification_needed" | "needs_analyst_review" | "refused";
+  source?: string;
+  metric_id?: string;
+  evidence_checked?: string[];
+  context_delta?: string;
+  raw_sql_sot?: string;
+  verified_dashboard_sot?: string;
+  verified_report_sot?: string;
+  validation?: string;
+  freshness?: string;
+  business_context_check?: string;
+  uncertainty?: string;
+  current_frame?: string;
+  anchors?: string[];
+  disconfirming_evidence?: string;
+  alternate_frames?: string[];
+  tripwires?: string;
+  action_implications?: string;
+  caveats?: string;
+  next_action?: string;
+}): Record<string, unknown> {
+  const now = new Date().toISOString();
+  const question = input.question?.trim() ?? "";
+  const sessionId = input.session_id?.trim() ?? "";
+  const contextDelta = input.context_delta?.trim() ?? "";
+  const title = input.title?.trim() || `Session context: ${question || sessionId || "ChatData workflow"}`.slice(0, 120);
+  const id = slugify(input.id?.trim() || sessionId || question || title || `session-context-${now}`).slice(0, 96);
+  const evidenceChecked = input.evidence_checked?.length
+    ? input.evidence_checked
+    : [
+      question ? `Question: ${question}` : "",
+      sessionId ? `Session: ${sessionId}` : "",
+      contextDelta ? `Context delta: ${contextDelta}` : ""
+    ].filter(Boolean);
+
+  return {
+    id,
+    title,
+    summary: [
+      input.summary.trim(),
+      question ? `\nQuestion: ${question}` : "",
+      contextDelta ? `\nReusable context delta: ${contextDelta}` : ""
+    ].join("").trim(),
+    answer_state: input.answer_state,
+    source: input.source ?? "chatdata_record_session_context",
+    metric_id: input.metric_id ?? "",
+    evidence_checked: evidenceChecked,
+    raw_sql_sot: input.raw_sql_sot,
+    verified_dashboard_sot: input.verified_dashboard_sot,
+    verified_report_sot: input.verified_report_sot,
+    validation: input.validation,
+    freshness: input.freshness,
+    business_context_check: input.business_context_check,
+    uncertainty: input.uncertainty,
+    current_frame: input.current_frame,
+    anchors: input.anchors,
+    disconfirming_evidence: input.disconfirming_evidence,
+    alternate_frames: input.alternate_frames,
+    tripwires: input.tripwires,
+    action_implications: input.action_implications,
+    caveats: input.caveats,
+    next_action: input.next_action ?? "Review this session proof in ChatData before treating it as approved reusable context."
+  };
+}
+
+function slugify(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || `session-context-${Date.now()}`;
+}
+
 async function readConfigResult(): Promise<ConfigReadResult> {
   try {
     const raw = await readFile(configPath, "utf8");
@@ -713,7 +1012,12 @@ async function writeConfig(config: ChatDataConfig): Promise<void> {
   await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
 }
 
-async function writeContextFiles(targetDir: string, files: ContextFilePayload[], reconcileFullPull = false): Promise<ContextWriteResult> {
+async function writeContextFiles(
+  targetDir: string,
+  files: ContextFilePayload[],
+  reconcileFullPull = false,
+  domain: string | null = null
+): Promise<ContextWriteResult> {
   const manifestEntries = await readManifestEntries(targetDir);
   const written: LocalContextFileSummary[] = [];
   const incomingPaths = new Set(files.map((file) => file.path));
@@ -766,7 +1070,82 @@ async function writeContextFiles(targetDir: string, files: ContextFilePayload[],
     "utf8"
   );
 
+  await writeArtifactManifest(targetDir, domain);
+
   return { written, cached };
+}
+
+async function writeArtifactManifest(targetDir: string, domain: string | null): Promise<void> {
+  const manifest = await buildLocalArtifactManifest(targetDir, domain);
+  await mkdir(dirname(manifest.artifact_manifest_path), { recursive: true });
+  await writeFile(manifest.artifact_manifest_path, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+}
+
+async function buildLocalArtifactManifest(targetDir: string, domain: string | null): Promise<LocalArtifactManifestResult> {
+  const manifestEntries = await readManifestEntries(targetDir);
+  const cached = await listCachedContextFiles(targetDir, manifestEntries);
+  const artifacts: TrustReceiptSummary[] = [];
+
+  for (const file of cached) {
+    if (!artifactTypeFromPath(file.path)) {
+      continue;
+    }
+
+    try {
+      const content = await readFile(file.local_path, "utf8");
+      artifacts.push(extractTrustReceiptFields({
+        path: file.path,
+        content,
+        content_hash: file.content_hash
+      }));
+    } catch (error) {
+      if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) {
+        throw error;
+      }
+    }
+  }
+
+  const artifactManifestPath = localArtifactManifestPath(targetDir);
+  const payload: LocalArtifactManifestResult = {
+    ok: true,
+    generated_at: new Date().toISOString(),
+    domain,
+    cache_path: targetDir,
+    artifact_manifest_path: artifactManifestPath,
+    metadata_only: true,
+    raw_rows_included: false,
+    artifact_count: artifacts.length,
+    artifacts
+  };
+  const guard = guardLocalQueueItem({
+    tool: "chatdata_local_artifact_manifest",
+    path: "artifacts/manifest.json",
+    method: "WRITE",
+    body: payload
+  });
+
+  if (guard.ok) {
+    return payload;
+  }
+
+  return {
+    ok: false,
+    generated_at: payload.generated_at,
+    domain,
+    cache_path: targetDir,
+    artifact_manifest_path: artifactManifestPath,
+    metadata_only: true,
+    raw_rows_included: false,
+    artifact_count: 0,
+    artifacts: [],
+    review_state: "blocked_sensitive",
+    error: guard.error,
+    pattern: guard.pattern
+  };
+}
+
+function localArtifactManifestPath(targetDir: string): string {
+  return join(targetDir, "artifacts", "manifest.json");
 }
 
 async function readManifestEntries(targetDir: string): Promise<Map<string, LocalContextFileSummary>> {
@@ -787,7 +1166,7 @@ async function readManifestEntries(targetDir: string): Promise<Map<string, Local
 
       byPath.set(entry.path, {
         path: entry.path,
-        local_path: "local_path" in entry && typeof entry.local_path === "string" ? entry.local_path : join(targetDir, entry.path),
+        local_path: join(targetDir, entry.path),
         version: "version" in entry && typeof entry.version === "number" ? entry.version : null,
         content_hash: "content_hash" in entry && typeof entry.content_hash === "string" ? entry.content_hash : null
       });
@@ -818,15 +1197,18 @@ async function listCachedContextFiles(
 ): Promise<LocalContextFileSummary[]> {
   const paths = await listMarkdownContextPaths(targetDir);
 
-  return paths.map((path) => {
+  return paths.flatMap((path) => {
     const entry = manifestEntries.get(path);
+    if (!entry) {
+      return [];
+    }
 
-    return {
+    return [{
       path,
       local_path: join(targetDir, path),
-      version: entry?.version ?? null,
-      content_hash: entry?.content_hash ?? null
-    };
+      version: entry.version,
+      content_hash: entry.content_hash
+    }];
   });
 }
 
@@ -882,7 +1264,7 @@ async function autoPullOnStart(): Promise<void> {
   try {
     const query = config.last_pull_revision ? `?since_revision=${encodeURIComponent(config.last_pull_revision)}` : "";
     const response = (await hubFetch(config, `/context/pull${query}`)) as ContextPullResponse;
-    await writeContextFiles(domainCachePath(config.domain), response.files ?? []);
+    await writeContextFiles(domainCachePath(config.domain), response.files ?? [], false, config.domain);
     config.last_pull_revision = response.revision ?? config.last_pull_revision ?? null;
     await writeConfig(config);
   } catch {
@@ -927,6 +1309,7 @@ async function hubFetch(config: ChatDataConfig, path: string, init: RequestInit 
       headers: {
         Authorization: `Bearer ${config.token}`,
         "Content-Type": "application/json",
+        "X-ChatData-MCP-Client": mcpClientSurface,
         ...(init.headers ?? {})
       }
     });
@@ -1030,6 +1413,23 @@ function guardLocalQueueItem(item: LocalQueueItem): { ok: true } | { ok: false; 
 
 function normalizeHubUrl(value: string): string {
   return value.replace(/\/$/, "");
+}
+
+function detectMcpClientSurface(): "claude-code" | "codex" | "generic" {
+  const explicitArg = process.argv.find((arg) => arg.startsWith("--client="))?.slice("--client=".length);
+  const splitArgIndex = process.argv.findIndex((arg) => arg === "--client");
+  const splitArg = splitArgIndex >= 0 ? process.argv[splitArgIndex + 1] : undefined;
+  const explicit = (explicitArg ?? splitArg ?? process.env.CHATDATA_MCP_CLIENT ?? "").trim().toLowerCase();
+
+  if (explicit === "claude" || explicit === "claude-code" || explicit === "claude-code-mcp") {
+    return "claude-code";
+  }
+
+  if (explicit === "codex" || explicit === "codex-mcp") {
+    return "codex";
+  }
+
+  return "generic";
 }
 
 function domainCachePath(domain: string): string {
