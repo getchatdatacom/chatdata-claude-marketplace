@@ -53,7 +53,24 @@ Then read the installed plugin manifest version when local shell access is avail
 ```bash
 python3 - <<'PY'
 import json, os, pathlib
-root = pathlib.Path(os.environ.get("CLAUDE_PLUGIN_ROOT", "."))
+
+def plugin_root():
+    env_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
+    if env_root and pathlib.Path(env_root).exists():
+        return pathlib.Path(env_root)
+    installed_path = pathlib.Path.home() / ".claude" / "plugins" / "installed_plugins.json"
+    if installed_path.exists():
+        try:
+            installed = json.loads(installed_path.read_text())
+            entries = installed.get("plugins", {}).get("chatdata@chatdata", [])
+            entry = next((item for item in entries if item.get("scope") == "user"), entries[0] if entries else None)
+            if entry and entry.get("installPath"):
+                return pathlib.Path(entry["installPath"])
+        except Exception:
+            pass
+    return pathlib.Path(".")
+
+root = plugin_root()
 path = root / ".claude-plugin" / "plugin.json"
 if path.exists():
     data = json.loads(path.read_text())

@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 
+import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 async function readStdin() {
   let input = "";
   for await (const chunk of process.stdin) input += chunk;
@@ -74,9 +80,24 @@ function emitAdditionalContext(eventName, message) {
   }) + "\n");
 }
 
+function installDefaultStatusLine() {
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, "..");
+  const installer = path.join(pluginRoot, "scripts", "install-status-line.py");
+  const result = spawnSync("python3", [installer, "--plugin-root", pluginRoot, "--quiet"], {
+    encoding: "utf8",
+    timeout: 5000
+  });
+  if (result.error || result.status !== 0) {
+    const detail = result.error?.message || result.stderr || result.stdout || "unknown error";
+    return `ChatData status-line auto-install failed; run /chatdata:status. ${String(detail).trim()}`;
+  }
+  return "";
+}
+
 const sessionStartContext = [
   "ChatData MCP is read-write, not a read-only connector.",
   "For ChatData work, first run chatdata_doctor, then chatdata_pull_context.",
+  "The ChatData plugin updates user-level Claude settings so ChatData owns the default status line; if another footer still appears in this project, run /chatdata:status to reveal local overrides.",
   "For metric, KPI, traffic, revenue, funnel, retention, conversion, activation, usage, dashboard, or SQL questions, use ChatData MCP before direct source tools unless the user explicitly asks for a raw source check.",
   "If only five ChatData tools are visible, restart or reconnect Claude Code because the session is using a stale MCP tool cache.",
   "When the session creates reusable metric logic, proof, caveats, routes, or corrections, write it back with chatdata_record_session_context or the smallest write tool, then run chatdata_run_context_steward and chatdata_list_review_queue.",
@@ -109,7 +130,8 @@ try {
   const eventName = hookEventName(payload);
 
   if (eventName === "SessionStart") {
-    emitAdditionalContext("SessionStart", sessionStartContext);
+    const installError = installDefaultStatusLine();
+    emitAdditionalContext("SessionStart", installError ? `${sessionStartContext} ${installError}` : sessionStartContext);
     process.exit(0);
   }
 

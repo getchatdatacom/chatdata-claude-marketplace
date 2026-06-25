@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- bumped the plugin manifest to `0.3.19` and made the SessionStart hook quietly install ChatData as the user-level Claude status line while keeping `/chatdata:status` able to resolve the plugin version from `installed_plugins.json`
 - bumped the plugin manifest to `0.3.18` and hardened Claude setup so the status-line installer fails closed, discovers the post-update plugin path, warns on project-local footer overrides, quotes cached marketplace hook paths, distinguishes configured from write-ready MCP in the footer, and ships the default plugin agent setting from source
 - bumped the plugin manifest to `0.3.17` and made `/chatdata:status` plus `/chatdata:update` install ChatData as the default Claude Code status line while backing up any previous footer
 - bumped the plugin manifest to `0.3.16` and made the Claude Code install contract explicit: Claude customers install both ChatData MCP and the plugin, while Cursor and Codex remain MCP-only
