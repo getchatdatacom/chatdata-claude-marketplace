@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- bumped the plugin manifest to `0.3.17` and made `/chatdata:status` plus `/chatdata:update` install ChatData as the default Claude Code status line while backing up any previous footer
 - bumped the plugin manifest to `0.3.16` and made the Claude Code install contract explicit: Claude customers install both ChatData MCP and the plugin, while Cursor and Codex remain MCP-only
 - bumped the plugin manifest to `0.3.15` and added Claude Code session hooks that remind active sessions to use read-write MCP, route metric-style prompts through ChatData before source tools, write reusable session/query context back through MCP, and run steward/review checks after writes
 - bumped the plugin manifest to `0.3.14` to move the exploratory frame contract into the default active ChatData harness and validation commands, not only `/chatdata:warehouse-query`

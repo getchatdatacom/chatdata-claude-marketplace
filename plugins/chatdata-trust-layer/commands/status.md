@@ -42,6 +42,14 @@ else:
 PY
 ```
 
+Then install or repair the ChatData Claude Code status line when local shell access is available:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install-status-line.py"
+```
+
+This is part of the default Claude plugin setup. It writes the user-level `statusLine` to ChatData, backs up any previous status line under `chatdata.previousStatusLine`, and repairs stale local ChatData status-line pointers. If this fails because Claude settings JSON is corrupt, stop and show the exact settings file path.
+
 If the plugin version is unknown, the command map looks stale, or the user expected a command that is missing, route to `/chatdata:update`. Do not claim the update is applied until the user runs `/reload-plugins` or restarts Claude Code.
 
 Required output:
@@ -51,6 +59,7 @@ Required output:
 - workspace and domain
 - context pull status
 - local cache path or missing-cache reason
+- status-line install result
 - pending review count
 - update path if needed: `/chatdata:update`
 - next command: `/chatdata:audit-context`, `/chatdata:sync-context`, `/chatdata:publish-patch`, or `/chatdata:update`

@@ -76,61 +76,10 @@ claude mcp remove chatdata -s user 2>/dev/null || true
 claude mcp add --scope user chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js" --client=claude-code
 ```
 
-6. Use shell to repair any ChatData status-line pointer that is pinned to an old plugin cache:
+6. Use shell to install ChatData as the default Claude Code status line and repair any ChatData status-line pointer that is pinned to an old plugin cache:
 
 ```bash
-python3 - <<'PY'
-import json, pathlib, shlex
-
-home = pathlib.Path.home()
-installed_path = home / ".claude" / "plugins" / "installed_plugins.json"
-try:
-    installed = json.loads(installed_path.read_text())
-except Exception:
-    print("Skipped ChatData status line repair: installed_plugins.json missing")
-    raise SystemExit(0)
-
-entries = installed.get("plugins", {}).get("chatdata@chatdata", [])
-entry = next((item for item in entries if item.get("scope") == "user"), entries[0] if entries else None)
-if not entry or not entry.get("installPath"):
-    print("Skipped ChatData status line repair: chatdata@chatdata install path not found")
-    raise SystemExit(0)
-
-status_script = pathlib.Path(entry["installPath"]) / "scripts" / "chatdata-status-line.js"
-if not status_script.exists():
-    print(f"Skipped ChatData status line repair: missing {status_script}")
-    raise SystemExit(0)
-
-settings_paths = [home / ".claude" / "settings.local.json"]
-current = pathlib.Path.cwd().resolve()
-while True:
-    settings_paths.append(current / ".claude" / "settings.local.json")
-    if current == current.parent:
-        break
-    current = current.parent
-seen = set()
-updated = []
-for raw_path in settings_paths:
-    path = raw_path.resolve()
-    if path in seen or not path.exists():
-        continue
-    seen.add(path)
-    try:
-        settings = json.loads(path.read_text())
-    except Exception:
-        continue
-    status_line = settings.get("statusLine")
-    command = status_line.get("command") if isinstance(status_line, dict) else ""
-    if "chatdata-status-line.js" not in command:
-        continue
-    settings["statusLine"] = {"type": "command", "command": "node " + shlex.quote(str(status_script))}
-    path.write_text(json.dumps(settings, indent=2) + "\n")
-    updated.append(str(path))
-
-print("ChatData status line points to " + str(status_script))
-if updated:
-    print("Updated " + ", ".join(updated))
-PY
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install-status-line.py"
 ```
 
 7. Tell the user to apply the update:
@@ -159,6 +108,7 @@ CHATDATA_INSTALL_REPO_DIR="${CHATDATA_INSTALL_REPO_DIR:-$HOME/.chatdata/chatdata
 git -C "$CHATDATA_INSTALL_REPO_DIR" pull --ff-only
 CHATDATA_MCP_DIR="${CHATDATA_MCP_DIR:-$CHATDATA_INSTALL_REPO_DIR/packages/mcp}"
 cd "$CHATDATA_MCP_DIR" && npm install && npm run build
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install-status-line.py"
 ```
 
 Then run `/reload-plugins` or restart Claude Code.
@@ -170,7 +120,7 @@ Then run `/reload-plugins` or restart Claude Code.
 - MCP repo/build result
 - plugin verification result
 - MCP pointer result
-- status-line pointer result
+- status-line install result
 - apply step: `/reload-plugins` or restart Claude Code
 - next command: `/chatdata:status`
 

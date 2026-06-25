@@ -1,6 +1,6 @@
 {
   "name": "chatdata",
-  "version": "0.3.16",
+  "version": "0.3.17",
   "description": "ChatData for Claude Code: principal analyst workflows plus MCP-backed trust-layer context for Claude and Codex.",
   "author": {
     "name": "ParasClaw",

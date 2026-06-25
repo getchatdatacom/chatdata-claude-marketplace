@@ -79,6 +79,7 @@ claude plugin install chatdata@chatdata
 ```
 
 Then run `/reload-plugins` or restart Claude Code before checking `/chatdata:status`.
+The status command installs or repairs the ChatData Claude Code status line by default so MCP health, context state, and review risk are visible without a separate settings step.
 
 Claude Code:
 
