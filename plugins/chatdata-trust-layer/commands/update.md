@@ -73,7 +73,7 @@ CHATDATA_INSTALL_REPO_DIR="${CHATDATA_INSTALL_REPO_DIR:-$HOME/.chatdata/chatdata
 CHATDATA_MCP_DIR="${CHATDATA_MCP_DIR:-$CHATDATA_INSTALL_REPO_DIR/packages/mcp}"
 test -f "$CHATDATA_MCP_DIR/dist/index.js" || { echo "ChatData MCP is not built yet. Run the build command first."; exit 1; }
 claude mcp remove chatdata -s user 2>/dev/null || true
-claude mcp add --scope user chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js"
+claude mcp add --scope user chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js" --client=claude-code
 ```
 
 6. Use shell to repair any ChatData status-line pointer that is pinned to an old plugin cache:

@@ -4,7 +4,7 @@ description: Record a ChatData proof receipt for an install, trusted answer, ben
 
 # Proof
 
-Use this command to record evidence that a ChatData workflow worked, failed, or needs review. Common proofs include install success, first trusted answer, benchmark tie-out, context sync, review queue cleanup, and design-partner demo readiness.
+Use this command to record evidence that a ChatData workflow worked, failed, or needs review. Common proofs include install success, first trusted answer, benchmark tie-out, context sync, review queue cleanup, and customer workflow readiness.
 
 Proof receipts should be short and reusable. Record the claim, evidence, result, confidence, frame, and remaining risk. Do not paste long inventories or raw files unless the proof depends on that exact excerpt.
 
@@ -47,6 +47,15 @@ Build a proof receipt with the facts the user supplied or the command observed:
 - time saved, if known
 - linked metric, answer path, patch id, or bundle revision when available
 - failure mode or remaining risk
+
+Reliability QA gate:
+
+- If the answer state is missing, mark the proof `needs_review`.
+- If a numeric answer has no confidence interval, validation interval, or explicit `not available` uncertainty state, mark the proof `needs_review`.
+- If the answer claims a trusted metric but lacks source path, raw SQL SoT, verified dashboard/report tie-out, or an explicit `not available`, mark the proof `needs_review`.
+- If the answer is exploratory and lacks anchors, disconfirming evidence, alternate frames, tripwires, or action implications, mark the proof `needs_review`.
+- If the workflow used a source the agent could not access or verify, mark the proof `failed` or `needs_review`; do not phrase it as trusted.
+- If the proof exposes missing reusable context, propose the smallest metric card, answer path, proof receipt, or patch instead of saving a trusted answer path.
 
 Then use the ChatData MCP server and run `chatdata_create_proof_receipt`.
 

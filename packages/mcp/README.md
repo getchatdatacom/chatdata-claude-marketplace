@@ -18,7 +18,7 @@ The default customer install is remote HTTP MCP:
 }
 ```
 
-Create the key in ChatData Settings, paste the snippet into Claude Code, Cursor, or another remote-HTTP-capable MCP client, then run `chatdata_doctor`. Use this local package only when the client cannot use remote HTTP MCP yet or when you need local cache/fallback behavior.
+Create the key in ChatData Settings, paste the snippet into Claude Code, Cursor, or another remote-HTTP-capable MCP client, then run `chatdata_doctor`. Claude Code customers must also install the ChatData Claude plugin. Use this local package only when the client cannot use remote HTTP MCP yet or when you need local cache/fallback behavior.
 
 ## Local Build
 
@@ -43,7 +43,7 @@ Choose the client surface before registering MCP.
 
 | Surface | MCP registration | Extra setup |
 | --- | --- | --- |
-| Claude Code | `claude mcp add --scope user chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js" --client=claude-code` | Optional: install or update the ChatData Claude plugin only if the user wants `/chatdata:` workbench commands. |
+| Claude Code | `claude mcp add --scope user chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js" --client=claude-code` | Required: install or update the ChatData Claude plugin for `/chatdata:` commands and Claude prompt/source-read hooks. |
 | Codex | `codex mcp add chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js" --client=codex` | No Claude plugin and no `/chatdata:` slash commands. |
 
 If both `claude` and `codex` CLIs are installed, use the current chat/client or the user's explicit request to choose the surface.
@@ -70,7 +70,15 @@ After login, click **Copy terminal setup command**, paste that whole command int
 
 The raw **Client config** JSON is shown for debugging and manual setup. Do not paste the raw JSON directly into Terminal. If Terminal prints `zsh: command not found: token:` or `zsh: command not found: workspace_id:`, you pasted the JSON by mistake; go back to Settings and copy the terminal setup command instead.
 
-Add the server to the selected surface.
+Add the server to the selected surface. For Claude Code, also install the plugin from the same ChatData marketplace distribution:
+
+```bash
+claude plugin marketplace add https://github.com/getchatdatacom/chatdata-claude-marketplace.git
+claude plugin marketplace update chatdata
+claude plugin install chatdata@chatdata
+```
+
+Then run `/reload-plugins` or restart Claude Code before checking `/chatdata:status`.
 
 Claude Code:
 
@@ -226,10 +234,11 @@ Codex does not have `/chatdata:` plugin commands, so the MCP flow should make th
 
 1. Run `chatdata_doctor`.
 2. Run `chatdata_pull_context`.
-3. Use targeted reads for the metric, source, answer path, proof receipt, caveat, or eval.
-4. Choose `answered`, `clarification_needed`, `needs_analyst_review`, or `refused` before polishing the answer.
-5. Record proof with `chatdata_create_proof_receipt` before calling a result trusted or reusable.
-6. Save a recurring answer path only when owner, route, validation, caveats, uncertainty state, and reuse rule are explicit.
+3. For KPI, traffic, funnel, revenue, retention, conversion, activation, usage, or other business-metric requests, search or read ChatData metric context before querying PostHog, warehouse, BI, or file tools.
+4. Use targeted reads for the metric, source, answer path, proof receipt, caveat, or eval.
+5. Choose `answered`, `clarification_needed`, `needs_analyst_review`, or `refused` before polishing the answer.
+6. Record proof with `chatdata_create_proof_receipt` before calling a result trusted or reusable.
+7. Save a recurring answer path only when owner, route, validation, caveats, uncertainty state, and reuse rule are explicit.
 
 Reliability failures include quietly wrong answers, missing answer state, unsupported numeric confidence, source mismatches, missing caveats, missing uncertainty interval, and claims that imply the agent checked a source it could not access.
 

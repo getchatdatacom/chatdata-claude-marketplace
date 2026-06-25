@@ -10,6 +10,8 @@ Focus the answer on the command catalog. Group commands by setup, catalog, data 
 
 State the default harness rule before the catalog: when ChatData is active, normal exploratory analytics questions automatically use MCP context, grounded anchors, frame trail, validation, proof, and sync gates. The user should not have to invoke `/chatdata:warehouse-query` to receive that standard.
 
+Mention that detailed templates and rules are fetchable through `chatdata_list_guidance` and `chatdata_read_guidance`; do not inline the heavy guidance bodies in this command.
+
 Include `/chatdata:warehouse-query` under analysis as the explicit source-routing command for data warehouse, KPI, dashboard, SQL, and recurring analytics inspection. If a command is an alias, name the canonical command it routes to.
 
 Required next command: `/chatdata:start` unless the user asked for one specific workflow.

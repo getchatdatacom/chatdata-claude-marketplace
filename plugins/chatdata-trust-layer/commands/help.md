@@ -16,6 +16,8 @@ First try to use the ChatData MCP server and run `chatdata_doctor`.
 
 Default harness rule: when ChatData is active, exploratory analytics questions automatically use MCP context, grounded anchors, frame trail, validation, proof, and sync gates. Users should not need to invoke `/chatdata:warehouse-query` to get that behavior. Treat `/chatdata:warehouse-query` as the explicit source-routing command for manual warehouse, BI, dashboard, SQL, or recurring KPI inspection.
 
+If the user needs detailed metric packet, answer path, proof receipt, CDO review, warehouse-query, pilot security, or setup troubleshooting guidance, use `chatdata_list_guidance` and `chatdata_read_guidance` through MCP instead of expanding that guidance in this help output.
+
 Then show the command map:
 
 - Start and setup: `/chatdata:start`, `/chatdata:login`, `/chatdata:status`, `/chatdata:update`, `/chatdata:onboarding`, `/chatdata:settings`

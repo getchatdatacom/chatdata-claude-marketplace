@@ -1,6 +1,6 @@
 # ChatData For Claude Code
 
-ChatData for Claude Code is the companion setup and operator workbench for the ChatData MCP trust layer.
+ChatData for Claude Code is the required Claude Code companion for the ChatData MCP trust layer.
 
 It supports two modes with the same core:
 
@@ -9,7 +9,7 @@ It supports two modes with the same core:
 2. `Builder mode`
    An analytics engineer or data owner uses the same plugin to bootstrap the trust-layer repo, draft metric packets, publish reviewed MCP context, and keep reviewed answer paths visible instead of burying them in chat transcripts.
 
-This is one product, not two disconnected surfaces. The active product is the MCP trust layer for Claude Code, Codex, Cursor, OpenClaw, and other MCP-capable clients. The Claude plugin exists to make setup, review, evals, and local trust work faster. Slack is a later expansion surface.
+This is one product, not two disconnected surfaces. Claude Code customers install both the ChatData MCP server and this plugin. Cursor, Codex, OpenClaw, and other MCP-capable clients use MCP only. The plugin exists to make Claude setup, review, evals, local trust work, and live prompt/source-read routing harder to miss. Slack is a later expansion surface.
 
 ## Why This Plugin Still Exists
 
@@ -20,7 +20,7 @@ This is worth being a plugin because it can:
 - use cross-session state, stronger retrieval, and batching for exploratory or file-heavy work
 - make proof receipt review, saved-path editing, and local artifact maintenance easier than plain MCP config
 
-The discipline is important: keep metric packets, proof receipts, reviewed answer paths, and evals readable, MCP-backed, and customer-owned. The plugin is the leverage layer, not the product center or the only copy of business logic.
+The discipline is important: keep metric packets, proof receipts, reviewed answer paths, and evals readable, MCP-backed, and customer-owned. The plugin is the required Claude leverage layer, not a second source of business truth.
 
 When a customer or internal stack already has a strong metadata substrate, such as Data Hub, the plugin should use that layer for catalog, lineage, ownership, and discovery context instead of recreating those primitives locally.
 
@@ -57,7 +57,7 @@ Default loop:
 This is how audit and sync stay coupled: audit proves the context can be trusted; sync saves new reusable context back into the hub. A successful investigation that does not sync its corrected definition, answer path, caveat, or proof receipt is incomplete.
 The user should not need to invoke `/chatdata:warehouse-query` to get this behavior. When ChatData is active and the user asks an analytics question, the default principal analyst harness routes through the same context, frame, validation, and proof gates.
 
-The optional Claude Code plugin ships a session hook in `hooks/hooks.json`. The hook does not replace MCP tools; it reminds Claude Code at session start and after context reads that ChatData MCP is read-write, stale five-tool sessions need a restart/reconnect, and reusable session/query context should be written back through MCP. Cursor, Codex, and other MCP clients get the same contract through `chatdata_agent_context`, `chatdata_list_guidance`, and `chatdata_read_guidance`.
+The required Claude Code plugin ships a session hook in `hooks/hooks.json`. The hook does not replace MCP tools; it reminds Claude Code at session start, detects metric-style user prompts, and checks likely source reads so recurring analytics work routes through ChatData context before PostHog, warehouse, BI, spreadsheet, or file tools. It also reminds the session to write reusable proof, metric cards, answer paths, and patches back through MCP. Cursor, Codex, and other MCP clients get the same contract through `chatdata_agent_context`, `chatdata_list_guidance`, and `chatdata_read_guidance`, but hard cross-client enforcement belongs in the remote MCP metric gateway.
 
 ## Shared Onboarding Loop
 

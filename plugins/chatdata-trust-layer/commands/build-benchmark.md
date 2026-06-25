@@ -18,7 +18,7 @@ Sequence:
    - does it match the metric grain, filters, exclusions, and freshness rules?
    - can it be tied out to a verified dashboard, saved report, raw SQL SoT, or trusted artifact?
    - does it duplicate or conflict with an existing metric, owner rule, source, or path?
-   - what production or design-partner failure would it miss?
+   - what production or customer-workflow failure would it miss?
 6. Record what still needs analyst review before the path can be promoted beyond draft.
 7. Save a proof receipt or proposed patch through MCP if the benchmark should become reusable.
 

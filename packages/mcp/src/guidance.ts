@@ -194,6 +194,32 @@ Review bar:
 - Raw rows, customer secrets, and credential-like values are not included.`
   },
   {
+    id: "business-metric-preflight",
+    kind: "rule",
+    title: "Business Metric Preflight",
+    description: "Use ChatData context before direct source tools for KPI, traffic, funnel, revenue, retention, conversion, activation, and usage questions.",
+    version: "2026-06-25",
+    recommended_when: [
+      "Before answering a business metric from PostHog, warehouse, BI, spreadsheet, or file data",
+      "When a metric term could have a canonical definition, caveat, owner, source of truth, or saved answer path"
+    ],
+    markdown: `# Business Metric Preflight
+
+Failure mode: an agent can query a live source, return a number, and skip the approved metric definition, caveat, proof receipt, or reusable answer path.
+
+Enforced route:
+
+1. Run chatdata_doctor if connection state is unknown.
+2. Run chatdata_pull_context.
+3. Search or read ChatData context for the metric, source, saved answer path, proof receipt, caveat, or guidance.
+4. If approved context exists, use it to define the metric before querying PostHog, warehouse, BI, spreadsheet, or file tools.
+5. If approved context is missing or ambiguous, say so and use clarification_needed or needs_analyst_review instead of silently choosing a definition.
+6. Query the live source for the current value only after the context pass.
+7. If the result is reusable, record the session context, proof receipt, metric card, or answer path through the smallest MCP write tool.
+
+The Claude Code plugin is required for Claude Code customers and can wrap this route with commands and hooks, but the rule belongs in MCP so Codex and other MCP-only clients inherit it.`
+  },
+  {
     id: "reliability-contract",
     kind: "rule",
     title: "Reliability Contract",
@@ -217,6 +243,7 @@ Answer states:
 Required before trust:
 
 - Pull current context with chatdata_doctor and chatdata_pull_context.
+- For business-metric questions, use ChatData to resolve the canonical definition, caveats, source, proof, or saved answer path before querying live source tools.
 - Use targeted reads for the metric, source, answer path, proof receipt, caveat, or eval.
 - Bind the answer to approved metric packets, raw SQL SoTs, verified dashboards or reports, saved answer paths, or prior proof receipts.
 - Include source path, freshness, validation result, caveats, business-context check, and reviewer state when available.
@@ -278,7 +305,7 @@ ChatData does not need a canvas to answer. It needs a trusted route.
 Route:
 
 1. Restate the decision and candidate frame.
-2. Search approved metric packets, answer paths, and proof receipts first.
+2. Search approved metric packets, answer paths, and proof receipts first. For business metrics, this happens before PostHog, warehouse, BI, spreadsheet, or file queries unless the user explicitly asked for a raw source check.
 3. If warehouse access is available, use only the connection and permissions granted by the host environment.
 4. Prefer reviewed SQL, dashboard references, dbt metadata, and saved query paths before new SQL.
 5. Validate the result against at least one independent anchor when possible.
@@ -338,7 +365,7 @@ Use instead:
 
 Active surfaces:
 
-- Claude Code: ChatData plugin plus ChatData MCP.
+- Claude Code: required ChatData plugin plus ChatData MCP.
 - Codex: ChatData MCP only.
 
 Checks:
@@ -378,7 +405,7 @@ export function readGuidance(id: string): GuidanceReadResult | null {
 
 export function renderAgentContext(surface: AgentSurface = "generic"): string {
   const surfaceLine = surface === "claude-code"
-    ? "Surface: Claude Code. Use the ChatData plugin plus the ChatData MCP server."
+    ? "Surface: Claude Code. Use the required ChatData plugin plus the ChatData MCP server."
     : surface === "codex"
       ? "Surface: Codex. Use the ChatData MCP server only; do not describe /chatdata: commands as Codex commands."
       : "Surface: generic agent. Prefer MCP tools when available, then route users to the active Claude Code or Codex setup path.";
@@ -397,13 +424,14 @@ export function renderAgentContext(surface: AgentSurface = "generic"): string {
     surfaceLine,
     "",
     "Active buyer surfaces:",
-    "- ChatData for Claude Code: personal/principal wedge using plugin plus MCP.",
+    "- ChatData for Claude Code: personal/principal wedge using required plugin plus MCP.",
     "- ChatData for Codex via MCP: AI-native data catalog and workflow surface.",
     "- Slack is later-stage packaging only unless the user explicitly reactivates it.",
     "",
     "Thin operating rule:",
     "- Keep local setup and agent docs compact.",
     "- Fetch metric packets, answer paths, proof receipts, the reliability contract, CDO review rules, warehouse-query route, pilot security posture, or setup troubleshooting only when needed.",
+    "- For KPI, traffic, funnel, revenue, retention, conversion, activation, usage, or other business-metric questions, use ChatData MCP before direct source tools; then write back proof if the answer is reusable.",
     "",
     "Setup:",
     `- ${setupLine}`,

@@ -1,10 +1,10 @@
 ---
-description: Audit ChatData context health before trusting a design-partner workflow.
+description: Audit ChatData context health before trusting a customer workflow.
 ---
 
 # Audit Context
 
-Use this command before a design-partner demo, stakeholder-facing answer, or trust-layer publish.
+Use this command before a stakeholder-facing answer, customer workflow, or trust-layer publish.
 
 Keep this command concise. Its job is to prove whether the current workspace context can be trusted, not to print every metric or file. Show counts, current risks, and the next repair. Only include a full inventory when the user explicitly asks for it.
 

@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "tsc --noEmit",
+    "test": "tsc --noEmit && npm run build && node --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "start": "node dist/index.js"
   },

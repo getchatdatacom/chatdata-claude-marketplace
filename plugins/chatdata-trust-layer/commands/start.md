@@ -21,7 +21,9 @@ This is the customer-facing feature map. Do not hide the breadth of the plugin. 
 
 3. State the default harness rule: when ChatData is active, exploratory analytics questions automatically use MCP context, grounded anchors, frame trail, validation, proof, and sync gates. Users should not need to invoke `/chatdata:warehouse-query` for the normal trusted-answer path. `/chatdata:warehouse-query` remains the explicit source-routing command when someone wants to inspect warehouse, BI, dashboard, SQL, or recurring KPI routing.
 
-4. Show the full command catalog:
+4. If the user needs a metric packet, answer path, proof receipt, CDO review, warehouse-query route, pilot security posture, or setup troubleshooting template, fetch it with `chatdata_list_guidance` and `chatdata_read_guidance` instead of pasting heavy guidance into this command output.
+
+5. Show the full command catalog:
 
 - Setup: `/chatdata:login`, `/chatdata:status`, `/chatdata:update`, `/chatdata:onboarding`, `/chatdata:settings`
 - Catalog: `/chatdata:catalog`, `/chatdata:metrics`, `/chatdata:sync-context`, `/chatdata:audit-context`, `/chatdata:publish-patch`
@@ -32,7 +34,7 @@ This is the customer-facing feature map. Do not hide the breadth of the plugin. 
 - Build and publish: `/chatdata:bootstrap-repo`, `/chatdata:draft-metric-packet`, `/chatdata:generate-evals`, `/chatdata:create-evals`, `/chatdata:publish-patch`
 - Account: `/chatdata:license`, `/chatdata:trial-and-privacy`, `/chatdata:activate-session`
 
-5. End with the single best next command for the current state.
+6. End with the single best next command for the current state.
 
 ## Required Output
 

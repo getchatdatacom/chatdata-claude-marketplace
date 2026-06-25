@@ -4,7 +4,7 @@ description: Run the shared ChatData onboarding flow and turn setup learnings in
 
 # Onboarding
 
-Use this command for a first customer session, a new teammate joining an existing workspace, or a design-partner setup pass.
+Use this command for a first customer session, a new teammate joining an existing workspace, or a self-service setup pass.
 
 This is not a single-player setup checklist. The job is to use existing MCP context as the directional map, fill the missing trust-layer gaps, and save reusable onboarding knowledge back through MCP so every Claude/Codex MCP user can pull the same state.
 
