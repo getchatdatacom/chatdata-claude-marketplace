@@ -76,10 +76,29 @@ claude mcp remove chatdata -s user 2>/dev/null || true
 claude mcp add --scope user chatdata -- node "$CHATDATA_MCP_DIR/dist/index.js" --client=claude-code
 ```
 
-6. Use shell to install ChatData as the default Claude Code status line and repair any ChatData status-line pointer that is pinned to an old plugin cache:
+6. Use shell to install ChatData as the default Claude Code status line from the newly installed plugin path, and repair any ChatData status-line pointer that is pinned to an old plugin cache:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install-status-line.py"
+python3 - <<'PY'
+import json, pathlib, subprocess, sys
+home = pathlib.Path.home()
+installed_path = home / ".claude" / "plugins" / "installed_plugins.json"
+try:
+    installed = json.loads(installed_path.read_text())
+except Exception:
+    print(f"ChatData status line install failed: missing or unreadable {installed_path}", file=sys.stderr)
+    raise SystemExit(2)
+entries = installed.get("plugins", {}).get("chatdata@chatdata", [])
+entry = next((item for item in entries if item.get("scope") == "user"), entries[0] if entries else None)
+if not entry or not entry.get("installPath"):
+    print("ChatData status line install failed: chatdata@chatdata install path not found", file=sys.stderr)
+    raise SystemExit(2)
+installer = pathlib.Path(entry["installPath"]) / "scripts" / "install-status-line.py"
+if not installer.exists():
+    print(f"ChatData status line install failed: missing {installer}", file=sys.stderr)
+    raise SystemExit(2)
+subprocess.run([sys.executable, str(installer)], check=True)
+PY
 ```
 
 7. Tell the user to apply the update:
@@ -105,10 +124,38 @@ claude plugin marketplace add https://github.com/getchatdatacom/chatdata-claude-
 claude plugin marketplace update chatdata
 claude plugin update chatdata@chatdata
 CHATDATA_INSTALL_REPO_DIR="${CHATDATA_INSTALL_REPO_DIR:-$HOME/.chatdata/chatdata-claude-marketplace}"
-git -C "$CHATDATA_INSTALL_REPO_DIR" pull --ff-only
+CHATDATA_INSTALL_REPO_URL="${CHATDATA_INSTALL_REPO_URL:-https://github.com/getchatdatacom/chatdata-claude-marketplace.git}"
+if [ -d "$CHATDATA_INSTALL_REPO_DIR/.git" ]; then
+  git -C "$CHATDATA_INSTALL_REPO_DIR" pull --ff-only
+elif [ -e "$CHATDATA_INSTALL_REPO_DIR" ]; then
+  echo "Move $CHATDATA_INSTALL_REPO_DIR or set CHATDATA_INSTALL_REPO_DIR to an empty path, then rerun."
+  exit 1
+else
+  mkdir -p "$(dirname "$CHATDATA_INSTALL_REPO_DIR")"
+  git clone "$CHATDATA_INSTALL_REPO_URL" "$CHATDATA_INSTALL_REPO_DIR"
+fi
 CHATDATA_MCP_DIR="${CHATDATA_MCP_DIR:-$CHATDATA_INSTALL_REPO_DIR/packages/mcp}"
 cd "$CHATDATA_MCP_DIR" && npm install && npm run build
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install-status-line.py"
+python3 - <<'PY'
+import json, pathlib, subprocess, sys
+home = pathlib.Path.home()
+installed_path = home / ".claude" / "plugins" / "installed_plugins.json"
+try:
+    installed = json.loads(installed_path.read_text())
+except Exception:
+    print(f"ChatData status line install failed: missing or unreadable {installed_path}", file=sys.stderr)
+    raise SystemExit(2)
+entries = installed.get("plugins", {}).get("chatdata@chatdata", [])
+entry = next((item for item in entries if item.get("scope") == "user"), entries[0] if entries else None)
+if not entry or not entry.get("installPath"):
+    print("ChatData status line install failed: chatdata@chatdata install path not found", file=sys.stderr)
+    raise SystemExit(2)
+installer = pathlib.Path(entry["installPath"]) / "scripts" / "install-status-line.py"
+if not installer.exists():
+    print(f"ChatData status line install failed: missing {installer}", file=sys.stderr)
+    raise SystemExit(2)
+subprocess.run([sys.executable, str(installer)], check=True)
+PY
 ```
 
 Then run `/reload-plugins` or restart Claude Code.

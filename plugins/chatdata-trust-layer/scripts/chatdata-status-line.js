@@ -86,6 +86,53 @@ function countManifestFiles(manifest, prefix) {
   return files.filter((file) => file && typeof file.path === "string" && file.path.startsWith(prefix)).length;
 }
 
+function freshStatusLineState(home, domain) {
+  const state = readJson(path.join(home, "status-line-state.json"), {});
+  if (!state || typeof state !== "object") {
+    return null;
+  }
+  if (domain && state.domain && String(state.domain) !== String(domain)) {
+    return null;
+  }
+
+  const checkedAt = Date.parse(String(state.checked_at || ""));
+  if (!Number.isFinite(checkedAt)) {
+    return null;
+  }
+
+  const maxAgeMs = Number(process.env.CHATDATA_STATUSLINE_MAX_AGE_MS || 6 * 60 * 60 * 1000);
+  if (Date.now() - checkedAt > maxAgeMs) {
+    return { ...state, stale: true };
+  }
+
+  return state;
+}
+
+function mcpStatusLabel(home, domain) {
+  if (!domain) {
+    return "mcp:missing";
+  }
+
+  const state = freshStatusLineState(home, domain);
+  if (!state) {
+    return "mcp:unverified";
+  }
+  if (state.stale) {
+    return "mcp:stale";
+  }
+  if (state.ok === false) {
+    return "mcp:error";
+  }
+  if (state.read_only === false && state.required_write_tools_present === true) {
+    return "mcp:write-ready";
+  }
+  if (state.read_only === true || state.required_write_tools_present === false) {
+    return "mcp:read-only";
+  }
+
+  return "mcp:checked";
+}
+
 function mcpContextInfo(home) {
   const config = readJson(path.join(home, "config.json"), {});
   const domain = config && config.domain ? String(config.domain) : "";
@@ -112,6 +159,7 @@ function mcpContextInfo(home) {
     cachedCount: Number.isFinite(cachedCount) ? cachedCount : 0,
     metricCount: countManifestFiles(manifest, "metrics/"),
     proofCount: countManifestFiles(manifest, "proof/"),
+    statusLabel: mcpStatusLabel(home, domain),
   };
 }
 
@@ -173,7 +221,7 @@ function main() {
     : path.join(projectState, "impact-log.jsonl");
   const impact = proofImpact(readJsonl(proofPath));
   const contextState = mcpContext.configured
-    ? `mcp:${mcpContext.domain}`
+    ? mcpContext.statusLabel
     : repoPath
       ? "repo:on"
       : "mcp:missing";

@@ -123,8 +123,50 @@ const server = new McpServer({
   version: "0.1.0"
 });
 const guidanceKindSchema = z.enum(["template", "skill", "rule", "runbook", "all"]);
-const agentSurfaceSchema = z.enum(["claude-code", "codex", "generic"]);
+const agentSurfaceSchema = z.enum(["claude-code", "cursor", "codex", "generic"]);
 const artifactTypeSchema = z.enum(["metric", "answer_path", "proof_receipt", "trusted_artifact", "all"]);
+const localMcpReadTools = [
+  "chatdata_status",
+  "chatdata_doctor",
+  "chatdata_list_guidance",
+  "chatdata_read_guidance",
+  "chatdata_agent_context",
+  "chatdata_pull_context",
+  "chatdata_list_local_artifacts",
+  "chatdata_read_local_artifact",
+  "chatdata_search_context",
+  "chatdata_read_context_file",
+  "chatdata_get_consent_status",
+  "chatdata_list_review_queue",
+  "chatdata_list_conflicts",
+  "chatdata_list_members",
+  "chatdata_export_bundle"
+];
+const localMcpWriteTools = [
+  "chatdata_activate",
+  "chatdata_grant_consent",
+  "chatdata_revoke_consent",
+  "chatdata_propose_patch",
+  "chatdata_run_context_steward",
+  "chatdata_publish_patch",
+  "chatdata_create_metric_card",
+  "chatdata_save_answer_path",
+  "chatdata_record_session_context",
+  "chatdata_create_proof_receipt",
+  "chatdata_share_context",
+  "chatdata_diff_versions",
+  "chatdata_rollback",
+  "chatdata_resolve_conflict"
+];
+const localMcpRequiredWriteTools = [
+  "chatdata_record_session_context",
+  "chatdata_create_metric_card",
+  "chatdata_save_answer_path",
+  "chatdata_create_proof_receipt",
+  "chatdata_propose_patch",
+  "chatdata_run_context_steward",
+  "chatdata_publish_patch"
+];
 
 server.tool("chatdata_status", "Read local ChatData MCP config and show workspace connection state.", {}, async () => {
   const configResult = await readConfigResult();
@@ -143,6 +185,8 @@ server.tool("chatdata_status", "Read local ChatData MCP config and show workspac
     hub_url: config?.hub_url ?? defaultHubUrl,
     consent: config?.consent ?? null,
     last_pull_revision: config?.last_pull_revision ?? null,
+    ...localMcpToolContract(),
+    tools: localMcpToolNames(),
     error_code: configResult.error_code ?? null,
     error: configResult.error ?? null,
     next_action: configResult.error ? configRepairNextAction() : null
@@ -255,6 +299,8 @@ server.tool(
         config_readable: configResult.config_readable,
         error_code: configResult.error_code,
         error: configResult.error,
+        ...localMcpToolContract(),
+        tools: localMcpToolNames(),
         next_action: configRepairNextAction()
       });
     }
@@ -263,6 +309,8 @@ server.tool(
       return text({
         ok: false,
         config_path: configPath,
+        ...localMcpToolContract(),
+        tools: localMcpToolNames(),
         next_action: "Open ChatData Settings, copy the terminal setup command, run it, then rerun chatdata_doctor."
       });
     }
@@ -293,6 +341,7 @@ server.tool(
       hub_url: config.hub_url,
       local_consent: config.consent ?? null
     };
+    Object.assign(checks, localMcpToolContract(), { tools: localMcpToolNames() });
 
     try {
       checks.workspace_status = await hubFetch(config, "/workspace/status");
@@ -1415,7 +1464,26 @@ function normalizeHubUrl(value: string): string {
   return value.replace(/\/$/, "");
 }
 
-function detectMcpClientSurface(): "claude-code" | "codex" | "generic" {
+function localMcpToolNames(): string[] {
+  return [...localMcpReadTools, ...localMcpWriteTools];
+}
+
+function localMcpToolContract(): Record<string, unknown> {
+  const tools = localMcpToolNames();
+  return {
+    transport: "stdio",
+    read_only: false,
+    tools_count: tools.length,
+    write_tools: localMcpWriteTools,
+    required_write_tools: localMcpRequiredWriteTools,
+    required_write_tools_present: localMcpRequiredWriteTools.every((tool) => tools.includes(tool)),
+    session_writeback_tool: "chatdata_record_session_context",
+    writeback_policy: "Every ChatData-enabled analytics session should pull approved context before answering and submit reusable proof, answer paths, metric cards, or patches back through MCP when the work creates reusable knowledge.",
+    stale_tool_cache_hint: "If this client only shows five tools (status, doctor, pull, search, read), reconnect or restart the MCP client. It is using a stale tool cache or old local package."
+  };
+}
+
+function detectMcpClientSurface(): "claude-code" | "cursor" | "codex" | "generic" {
   const explicitArg = process.argv.find((arg) => arg.startsWith("--client="))?.slice("--client=".length);
   const splitArgIndex = process.argv.findIndex((arg) => arg === "--client");
   const splitArg = splitArgIndex >= 0 ? process.argv[splitArgIndex + 1] : undefined;
@@ -1427,6 +1495,10 @@ function detectMcpClientSurface(): "claude-code" | "codex" | "generic" {
 
   if (explicit === "codex" || explicit === "codex-mcp") {
     return "codex";
+  }
+
+  if (explicit === "cursor" || explicit === "cursor-mcp") {
+    return "cursor";
   }
 
   return "generic";

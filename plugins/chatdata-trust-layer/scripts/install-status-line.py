@@ -94,6 +94,21 @@ def repair_stale_local_pointers(workspace: Path, status_script: Path) -> list[Pa
     return repaired
 
 
+def find_local_status_line_overrides(workspace: Path) -> list[tuple[Path, str]]:
+    overrides: list[tuple[Path, str]] = []
+    seen: set[Path] = set()
+    for path in local_settings_paths(workspace):
+        resolved = path.resolve()
+        if resolved in seen or not path.exists():
+            continue
+        seen.add(resolved)
+        settings = read_json(path, {})
+        command = status_line_command(settings)
+        if command and "chatdata-status-line.js" not in command:
+            overrides.append((path, command))
+    return overrides
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Install ChatData as the Claude Code status line.")
     parser.add_argument("--claude-home", default=str(Path.home() / ".claude"))
@@ -112,6 +127,7 @@ def main() -> int:
     settings_path = claude_home / "settings.json"
     backed_up_previous = install_default_status_line(settings_path, status_script)
     repaired = repair_stale_local_pointers(workspace, status_script)
+    overrides = find_local_status_line_overrides(workspace)
 
     print("ChatData status line installed.")
     print(f"- Claude settings: {settings_path}")
@@ -122,6 +138,11 @@ def main() -> int:
         print("- Repaired stale local statusLine pointers:")
         for path in repaired:
             print(f"  - {path}")
+    if overrides:
+        print("- Warning: project-local statusLine overrides can hide the ChatData footer in this workspace:")
+        for path, command in overrides:
+            print(f"  - {path}: {command}")
+        print("  Remove the local override or move it under chatdata.previousStatusLine if ChatData should own this project footer.")
     print("Run /reload-plugins or restart Claude Code to apply the footer in the current session.")
     return 0
 

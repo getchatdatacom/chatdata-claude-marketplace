@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
-const scriptPath = join(dirname(fileURLToPath(import.meta.url)), "chatdata-session-hook.js");
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const pluginRoot = join(scriptDir, "..");
+const scriptPath = join(scriptDir, "chatdata-session-hook.js");
+const hooksConfig = JSON.parse(readFileSync(join(pluginRoot, "hooks", "hooks.json"), "utf8"));
 
 function runHook(payload) {
   const result = spawnSync(process.execPath, [scriptPath], {
@@ -66,4 +71,31 @@ function parseHookOutput(stdout) {
 
   assert.equal(output.hookSpecificOutput.hookEventName, "PostToolUse");
   assert.match(output.systemMessage, /ChatData context was just read/i);
+}
+
+{
+  const tempRoot = mkdtempSync(join(tmpdir(), "chatdata plugin root "));
+  try {
+    mkdirSync(join(tempRoot, "scripts"));
+    cpSync(scriptPath, join(tempRoot, "scripts", "chatdata-session-hook.js"), { recursive: true });
+    const configuredCommand = hooksConfig.hooks.SessionStart[0].hooks[0].command;
+    const result = spawnSync(configuredCommand, {
+      shell: true,
+      input: JSON.stringify({
+        hook_event_name: "SessionStart",
+        source: "startup"
+      }),
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        CLAUDE_PLUGIN_ROOT: tempRoot
+      }
+    });
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.doesNotMatch(configuredCommand, /\$PLUGIN_ROOT/);
+    assert.match(configuredCommand, /"\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/chatdata-session-hook\.js"/);
+  } finally {
+    rmSync(tempRoot, { force: true, recursive: true });
+  }
 }

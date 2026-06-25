@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 export type GuidanceKind = "template" | "skill" | "rule" | "runbook";
-export type AgentSurface = "claude-code" | "codex" | "generic";
+export type AgentSurface = "claude-code" | "cursor" | "codex" | "generic";
 
 export interface GuidanceListItem {
   id: string;
@@ -406,12 +406,16 @@ export function readGuidance(id: string): GuidanceReadResult | null {
 export function renderAgentContext(surface: AgentSurface = "generic"): string {
   const surfaceLine = surface === "claude-code"
     ? "Surface: Claude Code. Use the required ChatData plugin plus the ChatData MCP server."
+    : surface === "cursor"
+      ? "Surface: Cursor. Use ChatData MCP tools through normal-language prompts; do not describe /chatdata: commands as Cursor commands."
     : surface === "codex"
       ? "Surface: Codex. Use the ChatData MCP server only; do not describe /chatdata: commands as Codex commands."
-      : "Surface: generic agent. Prefer MCP tools when available, then route users to the active Claude Code or Codex setup path.";
+      : "Surface: generic agent. Prefer MCP tools when available, then route users to the active Claude Code, Cursor, or Codex setup path.";
 
   const setupLine = surface === "claude-code"
     ? "Start with /chatdata:status, /chatdata:onboarding, and /chatdata:start after the MCP server is connected."
+    : surface === "cursor"
+      ? "Start by running chatdata_doctor, chatdata_pull_context, and chatdata_agent_context through MCP."
     : surface === "codex"
       ? "Start by running chatdata_doctor, chatdata_pull_context, and chatdata_agent_context through MCP."
       : "Start by detecting the host surface, then fetch the matching agent context.";
@@ -425,6 +429,7 @@ export function renderAgentContext(surface: AgentSurface = "generic"): string {
     "",
     "Active buyer surfaces:",
     "- ChatData for Claude Code: personal/principal wedge using required plugin plus MCP.",
+    "- ChatData for Cursor via MCP: AI-native data catalog and workflow surface without Claude plugin commands.",
     "- ChatData for Codex via MCP: AI-native data catalog and workflow surface.",
     "- Slack is later-stage packaging only unless the user explicitly reactivates it.",
     "",

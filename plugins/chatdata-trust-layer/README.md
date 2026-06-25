@@ -206,12 +206,21 @@ claude plugin marketplace add https://github.com/getchatdatacom/chatdata-claude-
 claude plugin marketplace update chatdata
 claude plugin update chatdata@chatdata
 CHATDATA_INSTALL_REPO_DIR="${CHATDATA_INSTALL_REPO_DIR:-$HOME/.chatdata/chatdata-claude-marketplace}"
-git -C "$CHATDATA_INSTALL_REPO_DIR" pull --ff-only
+CHATDATA_INSTALL_REPO_URL="${CHATDATA_INSTALL_REPO_URL:-https://github.com/getchatdatacom/chatdata-claude-marketplace.git}"
+if [ -d "$CHATDATA_INSTALL_REPO_DIR/.git" ]; then
+  git -C "$CHATDATA_INSTALL_REPO_DIR" pull --ff-only
+elif [ -e "$CHATDATA_INSTALL_REPO_DIR" ]; then
+  echo "Move $CHATDATA_INSTALL_REPO_DIR or set CHATDATA_INSTALL_REPO_DIR to an empty path, then rerun."
+  exit 1
+else
+  mkdir -p "$(dirname "$CHATDATA_INSTALL_REPO_DIR")"
+  git clone "$CHATDATA_INSTALL_REPO_URL" "$CHATDATA_INSTALL_REPO_DIR"
+fi
 CHATDATA_MCP_DIR="${CHATDATA_MCP_DIR:-$CHATDATA_INSTALL_REPO_DIR/packages/mcp}"
 cd "$CHATDATA_MCP_DIR" && npm install && npm run build
 ```
 
-Then run `/reload-plugins` or restart Claude Code, followed by `/chatdata:status`.
+Then run `/reload-plugins` or restart Claude Code, followed by `/chatdata:status`. The status command installs or repairs the ChatData footer from the newly installed plugin path.
 
 ## Product modes
 
