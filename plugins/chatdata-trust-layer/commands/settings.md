@@ -1,10 +1,10 @@
 ---
-description: Open the ChatData settings path for token, MCP, consent, and install repair.
+description: Open ChatData Settings for MCP API keys, consent, and install repair.
 ---
 
 # Settings
 
-Use this command when the user needs setup, token, consent, MCP install, or workspace repair.
+Use this command when the user needs setup, MCP API keys, consent, MCP install, or workspace repair.
 
 First run `chatdata_doctor` if available. If a repair is needed, send the user to:
 

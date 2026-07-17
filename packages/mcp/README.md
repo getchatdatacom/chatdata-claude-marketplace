@@ -198,6 +198,10 @@ Available tools:
 - `chatdata_read_local_artifact(path)`
 - `chatdata_search_context(q, include_drafts?)`
 - `chatdata_read_context_file(path)`
+- `chatdata_prepare_metric_answer(input)`
+- `chatdata_import_source_context(input)`
+- `chatdata_submit_answer_feedback(input)`
+- `chatdata_get_trust_scorecard()`
 - `chatdata_propose_patch(path, base_hash, new_markdown, purpose)`
 - `chatdata_list_review_queue()`
 - `chatdata_run_context_steward()`
@@ -219,7 +223,7 @@ Context file tools accept only relative Markdown paths like `metrics/activation-
 
 `chatdata_pull_context` also writes `artifacts/manifest.json` under the local cache. The manifest is a derived metadata-only view of approved metric packets, answer paths, proof receipts, and trusted artifacts. `chatdata_list_local_artifacts` and `chatdata_read_local_artifact` return structured trust fields and never return raw rows.
 
-Use `chatdata_create_metric_card` only for metric definitions: counts, rates, amounts, or status metrics with explicit grain, owner, source, raw SQL SoT when present, verified dashboard/report SoT when present, freshness, caveats, business context, uncertainty policy, and validation rules. Put playbooks, attribution routing, source stacks, evals, decisions, and answer paths in their matching context folders instead of `metrics/`.
+Use `chatdata_create_metric_card` only for canonical metric definitions: counts, rates, amounts, or status metrics with an Open Semantic Interchange core expression, explicit grain, owner, source, raw SQL SoT when present, verified dashboard/report SoT when present, freshness, caveats, business context, uncertainty policy, and validation rules. ChatData stores the canonical MCP metric shape as OSI core YAML: `version`, `semantic_model`, `datasets`, `fields`, `relationships`, `metrics`, `expression.dialects`, `ai_context`, and `custom_extensions`. Snowflake Cortex/Semantic View YAML is an export adapter for Snowflake workspaces, not the stored MCP truth. Put targets, goals, pace reads, scoreboards, playbooks, attribution routing, source stacks, evals, decisions, and answer paths in their matching context folders instead of `metrics/`.
 
 For recurring answers, `chatdata_save_answer_path` should include the canonical question, answer state, metric id, SQL or retrieval path, raw SQL SoT usage, verified dashboard/report tie-out, business-context check, decision, grounded anchors, current frame, disconfirming evidence, alternate frames, tripwires, validation rule, uncertainty policy, caveats, action implications, and reuse rule.
 
@@ -234,16 +238,16 @@ Use [`../../docs/product/chatdata-reliability-contract.md`](../../docs/product/c
 Codex does not have `/chatdata:` plugin commands, so the MCP flow should make the reliability steps explicit:
 
 1. Run `chatdata_doctor`.
-2. Run `chatdata_pull_context`.
-3. For KPI, traffic, funnel, revenue, retention, conversion, activation, usage, or other business-metric requests, search or read ChatData metric context before querying PostHog, warehouse, BI, or file tools.
-4. Use targeted reads for the metric, source, answer path, proof receipt, caveat, or eval.
-5. Choose `answered`, `clarification_needed`, `needs_analyst_review`, or `refused` before polishing the answer.
+2. For a business-metric request, call `chatdata_prepare_metric_answer` with the exact question and expected workspace domain.
+3. Confirm `plan_only: true` and `source_executed: false`. Stop on `clarification_needed`, `needs_analyst_review`, `source_mismatch`, or `refused`.
+4. Query the live source only after an `answered` route allows it, then run validation in dependency order.
+5. Bind proof and any reusable path to the route id, then submit reviewed outcome feedback.
 6. Record proof with `chatdata_create_proof_receipt` before calling a result trusted or reusable.
 7. Save a recurring answer path only when owner, route, validation, caveats, uncertainty state, and reuse rule are explicit.
 
 Reliability failures include quietly wrong answers, missing answer state, unsupported numeric confidence, source mismatches, missing caveats, missing uncertainty interval, and claims that imply the agent checked a source it could not access.
 
-Structured writes and proposed patches run through ChatData CDO pre-review before they become publishable human-review work. The response may include `cdo_pre_review`; if its decision is `needs_rewrite`, fix the required rewrites before asking a governance reviewer to approve the patch.
+Structured writes and proposed patches run through ChatData quality review before they become publishable human-review work. The response may include the compatibility field `cdo_pre_review`; if its decision is `needs_rewrite`, fix the required rewrites before asking a governance reviewer to approve the patch.
 
 On startup, the MCP server tries a best-effort pull. If the hub is unavailable, local-cache reads still work.
 

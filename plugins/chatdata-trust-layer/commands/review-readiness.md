@@ -18,7 +18,7 @@ The summary should show:
 - missing owner or benchmark coverage
 - skeptical second-pass status for any path being called ready
 - frame-trail coverage for exploratory answer paths: decision, anchors, disconfirming evidence, alternate frames, tripwires, and action implications
-- open CDO pre-review or steward blockers that must be rewritten, merged, rejected, or published
+- open quality-review or steward blockers that must be rewritten, merged, rejected, or published
 
 Keep the output compact and operational.
 

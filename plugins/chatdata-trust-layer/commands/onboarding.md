@@ -55,12 +55,12 @@ That means:
    - For conflicting workspaces: ask which existing artifact is canonical, then propose a patch rather than creating a duplicate.
 
 7. Save the reusable result through MCP.
-   - Use `chatdata_create_metric_card` only for an actual metric card: count, rate, amount, or status definition with grain, source, owner, freshness, caveats, and validation rules.
-   - Do not use metric cards for playbooks, routing rules, attribution decision logic, source stacks, evals, decisions, or answer paths. Use `chatdata_save_answer_path` for recurring questions and routes; use `chatdata_propose_patch` under `playbooks/`, `sources/`, `evals/`, or `decisions/` for broader shared guidance.
+   - Use `chatdata_create_metric_card` only for an actual OSI-compatible metric card: count, rate, amount, or status definition with expression, grain, source, owner, freshness, caveats, and validation rules.
+   - Do not use metric cards for targets, goals, pace reads, scoreboards, playbooks, routing rules, attribution decision logic, source stacks, evals, decisions, or answer paths. Use `chatdata_save_answer_path` for recurring questions and routes; use `chatdata_propose_patch` under `playbooks/`, `sources/`, `evals/`, or `decisions/` for broader shared guidance.
     - Use `chatdata_save_answer_path` to submit a recurring question and route to human review.
     - Use `chatdata_create_proof_receipt` to submit install proof, onboarding proof, first trusted answer proof, or benchmark proof to human review.
    - Use `chatdata_propose_patch` when the onboarding result needs owner review or touches broader shared guidance, such as `skills/customer-analytics-skill.md` or `sources/*.md`.
-   - Report the `cdo_pre_review` decision, score, and required rewrites returned by the write. If the CDO pre-review marks the item `needs_rewrite`, fix that before saying the artifact is approval-ready.
+   - Report the quality-review decision, score, and required rewrites returned in `cdo_pre_review`. If the quality review marks the item `needs_rewrite`, fix that before saying the artifact is approval-ready.
    - Do not call any newly submitted result approved until it appears in the review queue and is published.
 
 8. Use the ChatData MCP server and run `chatdata_run_context_steward`.

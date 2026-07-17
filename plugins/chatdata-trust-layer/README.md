@@ -46,13 +46,14 @@ Every principal or builder workflow must use the shared ChatData MCP state. The 
 Default loop:
 
 1. Run `chatdata_doctor` before stakeholder-facing analysis, sync, proof, review, or publish work.
-2. Run `chatdata_pull_context` before answering so the session uses the latest approved context and local cache.
-3. Use `chatdata_search_context` or `chatdata_read_context_file` for the specific metric, source, answer path, proof receipt, or caveat. Do not dump full inventories unless the user asks.
-4. For any exploratory analytics question, apply the frame trail by default: decision, 3-4 grounded anchors, candidate frames, disconfirming evidence, alternate-frame test, committed frame or downgrade, tripwires, and action implications.
-5. Answer with a compact trust label and the evidence that actually matters.
-6. If the work created reusable business knowledge, run the smallest write tool: `chatdata_record_session_context`, `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or `chatdata_propose_patch`.
-7. Run `chatdata_run_context_steward` and `chatdata_list_review_queue` after MCP writes so duplicate context and pending review are visible.
-8. Run `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:but-for-real`, `/chatdata:audit-context`, or `/chatdata:proof` before calling the result trusted, ready, reusable, or fixed.
+2. For a business-metric question, call `chatdata_prepare_metric_answer` before any direct source read. It selects a bounded approved context bundle, checks the workspace source, blocks unresolved corrections, plans validation, and returns a visible answer state without executing the source.
+3. Run `chatdata_pull_context` for broader non-metric context or when the prepared route directs it.
+4. Use `chatdata_search_context` or `chatdata_read_context_file` only when the prepared route or broader workflow needs another specific item. Do not dump full inventories.
+5. For any exploratory analytics question, apply the frame trail by default: decision, 3-4 grounded anchors, candidate frames, disconfirming evidence, alternate-frame test, committed frame or downgrade, tripwires, and action implications.
+6. Answer with a compact trust label and the evidence that actually matters.
+7. If the work created reusable business knowledge, run the smallest write tool: `chatdata_record_session_context`, `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or `chatdata_propose_patch`.
+8. Submit reviewed outcome feedback through `chatdata_submit_answer_feedback`, then run `chatdata_run_context_steward` and `chatdata_list_review_queue` after MCP writes.
+9. Run `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:but-for-real`, `/chatdata:audit-context`, or `/chatdata:proof` before calling the result trusted, ready, reusable, or fixed.
 
 This is how audit and sync stay coupled: audit proves the context can be trusted; sync saves new reusable context back into the hub. A successful investigation that does not sync its corrected definition, answer path, caveat, or proof receipt is incomplete.
 The user should not need to invoke `/chatdata:warehouse-query` to get this behavior. When ChatData is active and the user asks an analytics question, the default principal analyst harness routes through the same context, frame, validation, and proof gates.
@@ -120,6 +121,7 @@ Do not claim those outcomes are proven for a customer until a proof receipt or e
 
 - `/chatdata:question-framing`
 - `/chatdata:warehouse-query`
+- `/chatdata:prepare-metric-answer`
 - `/chatdata:investigate`
 - `/chatdata:investigate-metric`
 - `/chatdata:impact`

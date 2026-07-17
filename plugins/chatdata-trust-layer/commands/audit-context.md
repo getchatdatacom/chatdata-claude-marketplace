@@ -31,7 +31,7 @@ Then use the ChatData MCP server and run `chatdata_run_context_steward`.
 Then use the ChatData MCP server and run `chatdata_list_review_queue`.
 
 - List pending patches that could change metric definitions, answer paths, benchmarks, owner rules, or proof receipts.
-- Treat items marked `needs_rewrite` by CDO pre-review as quality blockers, not approval-ready work.
+- Treat items marked `needs_rewrite` by ChatData quality review as quality blockers, not approval-ready work.
 - List steward merge proposals as "human approval needed" with the proposed canonical path and matched source files when available.
 - If a pending patch affects the workflow being audited, mark the workflow `needs review` until the patch is published or rejected.
 
@@ -54,7 +54,7 @@ Required output:
 - MCP doctor status
 - context revision and cache status
 - steward run summary, including duplicate clusters and generated merge proposals
-- review-queue risk, including CDO pre-review rewrite blockers
+- review-queue risk, including quality-review rewrite blockers
 - exported bundle summary
 - duplicate or conflict risk
 - trust verdict: `proved`, `partially proved`, or `not proved`

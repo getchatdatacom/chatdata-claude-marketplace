@@ -12,6 +12,6 @@ State the default harness rule before the catalog: when ChatData is active, norm
 
 Mention that detailed templates and rules are fetchable through `chatdata_list_guidance` and `chatdata_read_guidance`; do not inline the heavy guidance bodies in this command.
 
-Include `/chatdata:warehouse-query` under analysis as the explicit source-routing command for data warehouse, KPI, dashboard, SQL, and recurring analytics inspection. If a command is an alias, name the canonical command it routes to.
+Include `/chatdata:prepare-metric-answer` and `/chatdata:warehouse-query` under analysis. The first prepares the fail-closed route before a source read; the second is the explicit source-routing command for manual inspection. If a command is an alias, name the canonical command it routes to.
 
 Required next command: `/chatdata:start` unless the user asked for one specific workflow.

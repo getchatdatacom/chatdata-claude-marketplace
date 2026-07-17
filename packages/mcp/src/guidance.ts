@@ -58,8 +58,8 @@ const guidanceRecords: GuidanceRecord[] = [
     id: "metric-packet-template",
     kind: "template",
     title: "Metric Packet Template",
-    description: "Owner-reviewed metric definition fields for count, rate, amount, and status metrics.",
-    version: "2026-06-13",
+    description: "Owner-reviewed Open Semantic Interchange core metric fields for count, rate, amount, and status metrics.",
+    version: "2026-06-25",
     recommended_when: [
       "Creating or repairing an approved metric card",
       "Converting loose KPI language into an owner-reviewed metric packet"
@@ -73,8 +73,14 @@ Required fields:
 - id:
 - title:
 - owner:
+- semantic_kind: metric
+- semantic_spec: open_semantic_interchange
+- semantic_spec_version: 0.2.0.dev0
+- metric_type: count | rate | amount | status
+- metric_expression:
 - definition:
 - grain:
+- dimensions:
 - filters:
 - exclusions:
 - source:
@@ -90,6 +96,9 @@ Required fields:
 
 Review bar:
 
+- The packet is a canonical metric, not a target, goal, pace read, scoreboard, routing verdict, source stack, or answer path.
+- The metric can be emitted as OSI core YAML: version, semantic_model, datasets, fields, relationships, metrics, expression.dialects, ai_context, and custom_extensions.
+- Snowflake Cortex semantic-view YAML is an export adapter for Snowflake workspaces, not the canonical MCP storage shape.
 - The definition names the denominator when the metric is a rate.
 - The grain and filters are explicit enough for another analyst to reproduce.
 - Source references point to approved metadata, dashboards, saved SQL, or dbt artifacts.
@@ -143,7 +152,7 @@ Review bar:
 - It states which frame won and what evidence would change it.
 - It names disconfirming evidence or explicitly says none was found.
 - It keeps raw row outputs out of the artifact.
-- It is specific enough for Claude Code or Codex to reuse without re-inventing the route.`
+- It is specific enough for Claude Code, Cursor, or Codex to reuse without inventing a new route.`
   },
   {
     id: "proof-receipt-template",
@@ -187,7 +196,7 @@ Review bar:
 
 - The receipt explains what was checked and what passed.
 - The source references are enough for a reviewer to find the artifact.
-- The answer state is explicit: answered, clarification_needed, needs_analyst_review, or refused.
+- The answer state is explicit: answered, clarification_needed, needs_analyst_review, source_mismatch, or refused.
 - Numeric answers have a confidence interval, validation interval, or explicit not available uncertainty state.
 - Exploratory answers include anchors, disconfirming evidence, alternate frames, tripwires, and action implications.
 - Any caveats, failed checks, or remaining risks are clear.
@@ -210,12 +219,12 @@ Failure mode: an agent can query a live source, return a number, and skip the ap
 Enforced route:
 
 1. Run chatdata_doctor if connection state is unknown.
-2. Run chatdata_pull_context.
-3. Search or read ChatData context for the metric, source, saved answer path, proof receipt, caveat, or guidance.
-4. If approved context exists, use it to define the metric before querying PostHog, warehouse, BI, spreadsheet, or file tools.
-5. If approved context is missing or ambiguous, say so and use clarification_needed or needs_analyst_review instead of silently choosing a definition.
-6. Query the live source for the current value only after the context pass.
-7. If the result is reusable, record the session context, proof receipt, metric card, or answer path through the smallest MCP write tool.
+2. Call chatdata_prepare_metric_answer with the exact question and expected workspace domain.
+3. Confirm plan_only is true and source_executed is false. Inspect selected, discounted, and excluded context plus the source, correction, and validation gates.
+4. Stop on clarification_needed, needs_analyst_review, source_mismatch, or refused. Never query around the block.
+5. Query the live source only when the route returns answered, then run validation in dependency order.
+6. Bind the proof receipt and any reusable answer path to the route_id and investigation_id.
+7. Submit reviewed outcome feedback with chatdata_submit_answer_feedback. Negative feedback creates review work and never changes approved context automatically.
 
 The Claude Code plugin is required for Claude Code customers and can wrap this route with commands and hooks, but the rule belongs in MCP so Codex and other MCP-only clients inherit it.`
   },
@@ -227,7 +236,7 @@ The Claude Code plugin is required for Claude Code customers and can wrap this r
     version: "2026-06-17",
     recommended_when: [
       "Before calling an answer trusted, reliable, reusable, or ready",
-      "When a Codex MCP-only client needs the same reliability bar as the Claude plugin"
+      "When a Cursor or Codex MCP-only client needs the same reliability bar as the Claude plugin"
     ],
     markdown: `# Reliability Contract
 
@@ -238,6 +247,7 @@ Answer states:
 - answered: validation passed and evidence is enough.
 - clarification_needed: the question is answerable but scope remains ambiguous.
 - needs_analyst_review: the route is plausible but not proven against approved logic.
+- source_mismatch: the requested workspace or source does not match the active ChatData workspace.
 - refused: the request is unsafe, out of scope, or asks for action under unresolved ambiguity.
 
 Required before trust:
@@ -263,16 +273,16 @@ Reliability failures:
 - claim that ChatData checked a source it could not access`
   },
   {
-    id: "cdo-review-rules",
+    id: "quality-review-rules",
     kind: "rule",
-    title: "CDO Review Rules",
+    title: "Quality Review Rules",
     description: "Pre-review checks before a patch becomes approved ChatData context.",
     version: "2026-06-13",
     recommended_when: [
       "Before publishing metric, answer-path, proof, or catalog context",
       "When deciding whether a local patch belongs in the review queue"
     ],
-    markdown: `# CDO Review Rules
+    markdown: `# Quality Review Rules
 
 Do not approve context until these checks pass.
 
@@ -355,30 +365,25 @@ Use instead:
     id: "setup-troubleshooting",
     kind: "runbook",
     title: "Setup Troubleshooting",
-    description: "Thin setup checks for Claude Code plugin plus MCP and Codex MCP-only installs.",
-    version: "2026-06-13",
+    description: "Thin setup checks for Claude Code MCP plus plugin, and Cursor/Codex MCP-only installs.",
+    version: "2026-06-26",
     recommended_when: [
-      "Claude Code or Codex cannot see ChatData tools",
-      "A user pasted raw config JSON instead of the terminal setup command"
+      "A client cannot see ChatData write tools",
+      "A client still describes ChatData as read-only"
     ],
     markdown: `# Setup Troubleshooting
 
-Active surfaces:
-
-- Claude Code: required ChatData plugin plus ChatData MCP.
-- Codex: ChatData MCP only.
-
 Checks:
 
-1. Verify ~/.chatdata/config.json exists and is valid JSON.
-2. Build packages/mcp and confirm dist/index.js exists.
-3. Claude Code: run claude plugin list and claude mcp get chatdata.
-4. Codex: run codex mcp get chatdata.
-5. Ask the agent to run chatdata_doctor with the expected workspace domain.
+1. Confirm the MCP endpoint is https://getchatdata.com/api/mcp.
+2. Confirm the client sends Authorization: Bearer YOUR_CHATDATA_KEY.
+3. Restart or reconnect the MCP client after changing config.
+4. Run chatdata_doctor and inspect required_write_tools_present.
+5. Claude Code only: verify the ChatData plugin is installed, reload plugins, then run /chatdata:status.
+6. Cursor and Codex only: do not install the Claude plugin; use MCP tools through normal prompts.
+7. Run tools/list if the client exposes it; the hosted tool list must include chatdata_record_session_context, chatdata_create_proof_receipt, chatdata_save_answer_path, chatdata_propose_patch, and chatdata_run_context_steward.
 
-Common failure:
-
-- If Terminal says zsh: command not found: token:, the user pasted raw Client config JSON. Send them back to Settings to copy the terminal setup command or surface-aware setup prompt.`
+If only five read tools appear, the session is stale or connected to an old local MCP package. Reconnect/restart the client or replace the local package with hosted MCP.`
   }
 ];
 
@@ -415,9 +420,9 @@ export function renderAgentContext(surface: AgentSurface = "generic"): string {
   const setupLine = surface === "claude-code"
     ? "Start with /chatdata:status, /chatdata:onboarding, and /chatdata:start after the MCP server is connected."
     : surface === "cursor"
-      ? "Start by running chatdata_doctor, chatdata_pull_context, and chatdata_agent_context through MCP."
+      ? "Start with chatdata_doctor and chatdata_agent_context, then use chatdata_prepare_metric_answer before a direct metric-source read."
     : surface === "codex"
-      ? "Start by running chatdata_doctor, chatdata_pull_context, and chatdata_agent_context through MCP."
+      ? "Start with chatdata_doctor and chatdata_agent_context, then use chatdata_prepare_metric_answer before a direct metric-source read."
       : "Start by detecting the host surface, then fetch the matching agent context.";
 
   const guidanceIds = listGuidance().map((item) => `- ${item.id} (${item.kind}): ${item.title}`).join("\n");
@@ -435,7 +440,7 @@ export function renderAgentContext(surface: AgentSurface = "generic"): string {
     "",
     "Thin operating rule:",
     "- Keep local setup and agent docs compact.",
-    "- Fetch metric packets, answer paths, proof receipts, the reliability contract, CDO review rules, warehouse-query route, pilot security posture, or setup troubleshooting only when needed.",
+    "- Fetch metric packets, answer paths, proof receipts, the reliability contract, quality review rules, warehouse-query route, pilot security posture, or setup troubleshooting only when needed.",
     "- For KPI, traffic, funnel, revenue, retention, conversion, activation, usage, or other business-metric questions, use ChatData MCP before direct source tools; then write back proof if the answer is reusable.",
     "",
     "Setup:",

@@ -8,9 +8,9 @@ Use this command when one operator wants a principal-level read on a KPI movemen
 
 Preferred flow:
 
-1. Run `chatdata_doctor`, then `chatdata_pull_context`. Stop on MCP, workspace, consent, or domain mismatch errors.
+1. Run `chatdata_doctor`, then call `chatdata_prepare_metric_answer` with the exact question and expected workspace domain. Stop on MCP, workspace, consent, domain mismatch, unresolved correction, structural failure, or refusal states. The planner must return `plan_only: true` and `source_executed: false`.
 2. Frame the question: decision, metric, grain, reporting period, segment, source of truth, owner, and trust standard. Ask only for missing details that materially change the answer.
-3. Use the built-in `warehouse-query` skill for source routing. Search or read the approved metric packet or semantic layer, matching answer path, trusted SQL, verified dashboard/report SoT, source reference, customer analytics skill, business-context packet, proof receipt, and eval before writing analysis.
+3. Use the built-in `warehouse-query` skill for the approved source route. Follow the context selected by `chatdata_prepare_metric_answer` before reading the live source; do not silently replace its source, correction, validation, or refusal decision.
 4. Build the exploratory frame before broad SQL:
    - start from the user decision, not the table list
    - identify 3-4 grounded anchors from actual data, dashboards, answer paths, or source references
@@ -49,7 +49,7 @@ Preferred flow:
    - business-context check
    - caveats
    - recommended next step
-12. If the analysis created a reusable definition, caveat, proof, validation rule, frame, tripwire, or answer path, run or recommend `/chatdata:sync-context`. If it should be trusted for future users, follow with `/chatdata:proof` or `/chatdata:audit-context`.
+12. Bind proof and any reusable answer path to the returned `route_id` and `investigation_id`. Submit reviewed outcome feedback through `chatdata_submit_answer_feedback`; negative feedback creates review work and never edits approved context automatically.
 
 Required output:
 

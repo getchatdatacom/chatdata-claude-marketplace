@@ -11,7 +11,7 @@ This is the customer-facing feature map. Do not hide the breadth of the plugin. 
 ## Sequence
 
 1. Try to use the ChatData MCP server and run `chatdata_doctor`.
-   - If MCP is unavailable, say ChatData is installed but MCP is not connected, then route to ChatData Settings and `/chatdata:login`.
+   - If MCP is unavailable, say ChatData is installed but MCP is not connected, then route to `https://getchatdata.com/agents.md` or ChatData Settings to install remote MCP plus the ChatData plugin. Use `/chatdata:login` only as a legacy local auth/config repair path.
    - If the doctor reports config, consent, token, workspace, or hub errors, show the failing check and one repair action.
    - If healthy, show the workspace domain and say approved context can be pulled from the ChatData catalog.
 
@@ -21,14 +21,14 @@ This is the customer-facing feature map. Do not hide the breadth of the plugin. 
 
 3. State the default harness rule: when ChatData is active, exploratory analytics questions automatically use MCP context, grounded anchors, frame trail, validation, proof, and sync gates. Users should not need to invoke `/chatdata:warehouse-query` for the normal trusted-answer path. `/chatdata:warehouse-query` remains the explicit source-routing command when someone wants to inspect warehouse, BI, dashboard, SQL, or recurring KPI routing.
 
-4. If the user needs a metric packet, answer path, proof receipt, CDO review, warehouse-query route, pilot security posture, or setup troubleshooting template, fetch it with `chatdata_list_guidance` and `chatdata_read_guidance` instead of pasting heavy guidance into this command output.
+4. If the user needs a metric packet, answer path, proof receipt, quality review, warehouse-query route, pilot security posture, or setup troubleshooting template, fetch it with `chatdata_list_guidance` and `chatdata_read_guidance` instead of pasting heavy guidance into this command output.
 
 5. Show the full command catalog:
 
-- Setup: `/chatdata:login`, `/chatdata:status`, `/chatdata:update`, `/chatdata:onboarding`, `/chatdata:settings`
+- Setup: `/chatdata:status`, `/chatdata:update`, `/chatdata:onboarding`, `/chatdata:settings`, `/chatdata:login` for legacy local auth/config repair
 - Catalog: `/chatdata:catalog`, `/chatdata:metrics`, `/chatdata:sync-context`, `/chatdata:audit-context`, `/chatdata:publish-patch`
 - Data connection: `/chatdata:connect-data`, `/chatdata:scan-sources`, `/chatdata:context-bootstrap`, `/chatdata:company-repo`
-- Analysis: `/chatdata:question-framing`, `/chatdata:warehouse-query`, `/chatdata:investigate`, `/chatdata:investigate-metric`, `/chatdata:prepare-wbr`, `/chatdata:write-operating-brief`, `/chatdata:story-and-action`
+- Analysis: `/chatdata:prepare-metric-answer`, `/chatdata:question-framing`, `/chatdata:warehouse-query`, `/chatdata:investigate`, `/chatdata:investigate-metric`, `/chatdata:prepare-wbr`, `/chatdata:write-operating-brief`, `/chatdata:story-and-action`
 - Trust and validation: `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:benchmark`, `/chatdata:build-benchmark`, `/chatdata:but-for-real`
 - Memory and proof: `/chatdata:proof`, `/chatdata:proof-receipts`, `/chatdata:feedback-memory`, `/chatdata:drift-check`, `/chatdata:review-readiness`
 - Build and publish: `/chatdata:bootstrap-repo`, `/chatdata:draft-metric-packet`, `/chatdata:generate-evals`, `/chatdata:create-evals`, `/chatdata:publish-patch`

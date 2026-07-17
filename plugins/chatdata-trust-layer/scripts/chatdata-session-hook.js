@@ -96,7 +96,7 @@ function installDefaultStatusLine() {
 
 const sessionStartContext = [
   "ChatData MCP is read-write, not a read-only connector.",
-  "For ChatData work, first run chatdata_doctor, then chatdata_pull_context.",
+  "For ChatData work, first run chatdata_doctor; for a metric question, call chatdata_prepare_metric_answer before any direct source read.",
   "The ChatData plugin updates user-level Claude settings so ChatData owns the default status line; if another footer still appears in this project, run /chatdata:status to reveal local overrides.",
   "For metric, KPI, traffic, revenue, funnel, retention, conversion, activation, usage, dashboard, or SQL questions, use ChatData MCP before direct source tools unless the user explicitly asks for a raw source check.",
   "If only five ChatData tools are visible, restart or reconnect Claude Code because the session is using a stale MCP tool cache.",
@@ -112,15 +112,15 @@ const postContextReadReminder = [
 
 const metricPromptReminder = [
   "This looks like a business metric request.",
-  "Route through ChatData before direct source tools: run chatdata_doctor if needed, run chatdata_pull_context, then search/read the relevant metric packet, source note, answer path, proof receipt, caveat, or guidance.",
-  "Only query PostHog, warehouse, BI, spreadsheet, or file tools after the ChatData context pass unless the user explicitly asked for a raw source check.",
-  "If approved context is missing or ambiguous, choose clarification_needed or needs_analyst_review instead of silently inventing a definition.",
-  "If the answer is reusable, write back proof with chatdata_record_session_context, chatdata_create_proof_receipt, chatdata_save_answer_path, or chatdata_create_metric_card."
+  "Route through ChatData before direct source tools: run chatdata_doctor if needed, then call chatdata_prepare_metric_answer with the exact question and expected workspace domain.",
+  "Confirm plan_only is true and source_executed is false. Only query PostHog, warehouse, BI, spreadsheet, or file tools when the route returns answered.",
+  "Stop on clarification_needed, needs_analyst_review, source_mismatch, or refused; do not query around the block.",
+  "Bind reusable proof to the route_id and investigation_id, then submit reviewed outcome feedback with chatdata_submit_answer_feedback."
 ].join(" ");
 
 const postSourceReadReminder = [
   "A likely source-read tool just ran during a metric-style workflow.",
-  "Before calling the result trusted or reusable, confirm ChatData context was used for the metric definition and source route.",
+  "Before calling the result trusted or reusable, confirm chatdata_prepare_metric_answer allowed the source read and bind proof to its route id.",
   "If this source read created a reusable answer, caveat, validation result, or route, write it back through ChatData MCP and then run steward/review checks."
 ].join(" ");
 
@@ -145,7 +145,7 @@ try {
 
   if (eventName === "PostToolUse") {
     const usedTool = toolName(payload);
-    if (/chatdata_(pull_context|search_context|read_context_file)$/.test(usedTool)) {
+    if (/chatdata_(prepare_metric_answer|pull_context|search_context|read_context_file)$/.test(usedTool)) {
       emitAdditionalContext("PostToolUse", postContextReadReminder);
       process.exit(0);
     }

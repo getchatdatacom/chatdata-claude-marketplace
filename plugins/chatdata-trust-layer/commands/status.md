@@ -27,7 +27,9 @@ Then use the ChatData MCP server and run `chatdata_list_review_queue`.
 - Report the count of pending patches and at most the top 3 pending paths.
 - If the queue cannot be read, say context status is incomplete and show the queue error.
 
-Then, when local shell access is available, write a small status-line state file from the `chatdata_doctor` result you just observed. Use the actual doctor values; do not invent them:
+The Claude status line refreshes live workspace status from the portal token and verifies MCP health through the configured Claude `chatdata` MCP server. It writes `~/.chatdata/status-line-state.json` as a short-lived cache so the footer can stay fast and still fall back when the network is unavailable.
+
+When local shell access is available and you need an immediate manual repair, write a small status-line state file from the `chatdata_doctor` result you just observed. Use the actual doctor values; do not invent them:
 
 ```bash
 python3 - <<'PY'
@@ -37,7 +39,8 @@ state = {
     "ok": __DOCTOR_OK_JSON__,
     "domain": "__DOCTOR_DOMAIN__",
     "read_only": __DOCTOR_READ_ONLY_JSON__,
-    "required_write_tools_present": __DOCTOR_REQUIRED_WRITE_TOOLS_PRESENT_JSON__
+    "required_write_tools_present": __DOCTOR_REQUIRED_WRITE_TOOLS_PRESENT_JSON__,
+    "roi": __DOCTOR_OR_WORKSPACE_STATUS_ROI_JSON__
 }
 path = pathlib.Path(os.path.expanduser("~/.chatdata/status-line-state.json"))
 path.parent.mkdir(parents=True, exist_ok=True)
@@ -46,7 +49,7 @@ print(f"Updated ChatData status-line state: {path}")
 PY
 ```
 
-If the doctor response does not include `read_only` and `required_write_tools_present`, set both JSON placeholders to `null`. The status line should show `mcp:unverified`, `mcp:read-only`, `mcp:error`, or `mcp:write-ready`; do not treat a static `~/.chatdata/config.json` as live MCP health.
+If the doctor response does not include `read_only` and `required_write_tools_present`, set both JSON placeholders to `null`. If the doctor or workspace-status response includes Product ROI, write the workspace-status ROI first and use doctor ROI only when workspace status is unavailable; otherwise set `roi` to `null`. Do not invent ROI. For MCP-configured workspaces, the status line should show workspace-level Product ROI only when a fresh ROI payload exists; it must not fall back to local proof impact logs as avoided cost. It should also show `mcp:unverified`, `mcp:read-only`, `mcp:error`, or `mcp:write-ready`. Do not treat a static `~/.chatdata/config.json` as live MCP health.
 
 Then read the installed plugin manifest version when local shell access is available:
 
@@ -99,6 +102,7 @@ Required output:
 - local cache path or missing-cache reason
 - status-line install result, including any project-local override warning
 - status-line state: `mcp:write-ready`, `mcp:read-only`, `mcp:error`, `mcp:stale`, or `mcp:unverified`
+- Product ROI status-line scope: workspace-level ROI only when returned by MCP; no local proof impact fallback for MCP-configured workspaces
 - pending review count
 - update path if needed: `/chatdata:update`
 - next command: `/chatdata:audit-context`, `/chatdata:sync-context`, `/chatdata:publish-patch`, or `/chatdata:update`

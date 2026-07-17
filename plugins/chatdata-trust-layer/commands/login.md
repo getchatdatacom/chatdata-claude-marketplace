@@ -1,10 +1,10 @@
 ---
-description: Connect your ChatData token and verify the workspace MCP config.
+description: Repair legacy local ChatData auth/config and verify the workspace MCP config.
 ---
 
 # Login
 
-Use this command when ChatData needs a workspace token, MCP config, or domain check.
+Use this command only when ChatData needs legacy local auth/config repair or a domain check. Primary setup uses remote MCP API keys from ChatData Settings.
 
 Do not ask the user to paste token JSON into Terminal. Send them to ChatData Settings and have them copy the full surface-aware setup prompt or the terminal setup command.
 

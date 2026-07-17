@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- bumped the plugin manifest to `0.3.20` and added `/chatdata:prepare-metric-answer`, fail-closed route planning before direct source reads, route-bound proof, reviewed answer feedback, and the shared Trust Harness scorecard tools
+- fixed the Claude status line so remote MCP-only Claude setups are not shown as `mcp:missing` just because `~/.chatdata/config.json` is absent; the footer now detects the configured Claude `chatdata` MCP server and can refresh from `chatdata_doctor`
+- corrected `/chatdata:help` repair copy so Claude Code users get the full remote MCP plus plugin setup path instead of the terminal-config-only fallback
+- made the Claude status line self-refresh live workspace status, onboarding counts, Product ROI, trial days, and MCP doctor health instead of depending on a stale local context manifest or manual `/chatdata:status` state write
 - bumped the plugin manifest to `0.3.19` and made the SessionStart hook quietly install ChatData as the user-level Claude status line while keeping `/chatdata:status` able to resolve the plugin version from `installed_plugins.json`
 - bumped the plugin manifest to `0.3.18` and hardened Claude setup so the status-line installer fails closed, discovers the post-update plugin path, warns on project-local footer overrides, quotes cached marketplace hook paths, distinguishes configured from write-ready MCP in the footer, and ships the default plugin agent setting from source
 - bumped the plugin manifest to `0.3.17` and made `/chatdata:status` plus `/chatdata:update` install ChatData as the default Claude Code status line while backing up any previous footer

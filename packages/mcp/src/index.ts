@@ -120,11 +120,19 @@ const mcpClientSurface = detectMcpClientSurface();
 
 const server = new McpServer({
   name: "chatdata",
-  version: "0.1.0"
+  version: "0.2.0"
 });
 const guidanceKindSchema = z.enum(["template", "skill", "rule", "runbook", "all"]);
 const agentSurfaceSchema = z.enum(["claude-code", "cursor", "codex", "generic"]);
 const artifactTypeSchema = z.enum(["metric", "answer_path", "proof_receipt", "trusted_artifact", "all"]);
+const sourceTableSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  grain: z.string().optional(),
+  owner: z.string().optional(),
+  columns: z.array(z.string()).optional(),
+  excluded_columns: z.array(z.string()).optional()
+});
 const localMcpReadTools = [
   "chatdata_status",
   "chatdata_doctor",
@@ -136,6 +144,8 @@ const localMcpReadTools = [
   "chatdata_read_local_artifact",
   "chatdata_search_context",
   "chatdata_read_context_file",
+  "chatdata_prepare_metric_answer",
+  "chatdata_get_trust_scorecard",
   "chatdata_get_consent_status",
   "chatdata_list_review_queue",
   "chatdata_list_conflicts",
@@ -144,6 +154,8 @@ const localMcpReadTools = [
 ];
 const localMcpWriteTools = [
   "chatdata_activate",
+  "chatdata_import_source_context",
+  "chatdata_submit_answer_feedback",
   "chatdata_grant_consent",
   "chatdata_revoke_consent",
   "chatdata_propose_patch",
@@ -152,6 +164,8 @@ const localMcpWriteTools = [
   "chatdata_create_metric_card",
   "chatdata_save_answer_path",
   "chatdata_record_session_context",
+  "chatdata_import_source_context",
+  "chatdata_submit_answer_feedback",
   "chatdata_create_proof_receipt",
   "chatdata_share_context",
   "chatdata_diff_versions",
@@ -240,6 +254,92 @@ server.tool(
     });
   }
 );
+
+server.tool(
+  "chatdata_prepare_metric_answer",
+  "Plan a metric answer through approved context and fail-closed gates before any direct source read. This never executes the source.",
+  {
+    question: z.string().min(1),
+    workspace_domain: z.string().optional(),
+    source_hint: z.string().optional(),
+    decision_to_make: z.string().optional(),
+    success_criteria: z.string().optional(),
+    investigation_id: z.string().optional(),
+    risk_tier: z.enum(["routine", "high"]).optional(),
+    context_limit: z.number().int().min(1).max(5).optional(),
+    unresolved_correction_ids: z.array(z.string()).optional(),
+    structural_validation: z.enum(["not_run", "passed", "failed"]).optional(),
+    root_cause: z.boolean().optional(),
+    test_scenario: z.enum(["activations_exceed_signups"]).optional()
+  },
+  async (input) => {
+    const config = await requireConfig();
+    return text(await hubFetch(config, "/context/metric-answer/prepare", {
+      method: "POST",
+      body: JSON.stringify(input)
+    }));
+  }
+);
+
+server.tool(
+  "chatdata_import_source_context",
+  "Submit a bounded 10-20 table metadata-only source manifest to the human review queue.",
+  {
+    id: z.string().optional(),
+    source_type: z.enum(["dbt", "snowflake", "github", "dashboard", "manual"]),
+    source_reference: z.string().optional(),
+    pilot_domain: z.string().min(1),
+    target_users: z.string().optional(),
+    business_sponsor: z.string().min(1),
+    context_owner: z.string().min(1),
+    decision_risk: z.string().optional(),
+    available_ground_truth: z.array(z.string()).optional(),
+    golden_questions: z.array(z.string()).optional(),
+    tables: z.array(sourceTableSchema).min(10).max(20)
+  },
+  async (input) => {
+    const config = await requireConfig();
+    return text(await hubFetchOrQueue(config, "/context/source-context/import", {
+      method: "POST",
+      body: JSON.stringify(input)
+    }, {
+      tool: "chatdata_import_source_context",
+      path: "/context/source-context/import",
+      method: "POST",
+      body: input
+    }));
+  }
+);
+
+server.tool(
+  "chatdata_submit_answer_feedback",
+  "Attach reviewed outcome feedback to a prepared route; negative feedback creates review work, never automatic context changes.",
+  {
+    route_id: z.string().min(1),
+    outcome: z.enum(["correct", "helpful", "wrong", "unclear", "missing_context"]),
+    summary: z.string().optional(),
+    correction_summary: z.string().optional(),
+    evidence: z.array(z.string()).optional(),
+    client: z.string().optional()
+  },
+  async (input) => {
+    const config = await requireConfig();
+    return text(await hubFetchOrQueue(config, "/context/answer-feedback", {
+      method: "POST",
+      body: JSON.stringify(input)
+    }, {
+      tool: "chatdata_submit_answer_feedback",
+      path: "/context/answer-feedback",
+      method: "POST",
+      body: input
+    }));
+  }
+);
+
+server.tool("chatdata_get_trust_scorecard", "Read the route release gate and seven-day production trust signals.", {}, async () => {
+  const config = await requireConfig();
+  return text(await hubFetch(config, "/context/trust-scorecard"));
+});
 
 server.tool(
   "chatdata_activate",
@@ -363,7 +463,7 @@ server.tool("chatdata_get_consent_status", "Read workspace consent state from th
 
 server.tool(
   "chatdata_grant_consent",
-  "Grant metadata-sync-v1 consent for this workspace token.",
+  "Grant metadata-sync-v1 consent for this workspace session.",
   {
     consent_version: z.string().default("metadata-sync-v1")
   },
@@ -661,10 +761,17 @@ server.tool(
 
 server.tool(
   "chatdata_create_metric_card",
-  "Submit a metric definition card to the ChatData human review queue. Use only for count, rate, amount, or status metrics, not playbooks, routing guidance, source stacks, evals, decisions, or answer paths.",
+  "Submit an OSI core metric definition card to the ChatData human review queue. Use only for canonical count, rate, amount, or status metrics with an expression. Snowflake Cortex semantic-view YAML is an export adapter, not the canonical MCP storage shape. Do not use this for targets, goals, pace reads, playbooks, routing guidance, source stacks, evals, decisions, or answer paths.",
   {
     id: z.string().min(1),
     definition: z.string().min(1),
+    semantic_kind: z.literal("metric").optional(),
+    metric_type: z.enum(["count", "rate", "amount", "status"]).optional(),
+    metric_expression: z.string().optional(),
+    osi_metric_expression: z.string().optional(),
+    calculation: z.string().optional(),
+    unit: z.string().optional(),
+    dimensions: z.string().optional(),
     grain: z.string().optional(),
     filters: z.string().optional(),
     exclusions: z.string().optional(),
@@ -704,7 +811,16 @@ server.tool(
     steps: z.array(z.string()).optional(),
     owner: z.string().optional(),
     metric_id: z.string().optional(),
-    answer_state: z.enum(["answered", "clarification_needed", "needs_analyst_review", "refused"]).optional(),
+    answer_state: z.enum(["answered", "clarification_needed", "needs_analyst_review", "source_mismatch", "refused"]).optional(),
+    route_id: z.string().optional(),
+    investigation_id: z.string().optional(),
+    duration_ms: z.number().nonnegative().optional(),
+    context_items_loaded: z.number().int().nonnegative().optional(),
+    estimated_context_tokens: z.number().int().nonnegative().optional(),
+    source_reads: z.number().int().nonnegative().optional(),
+    model_class: z.string().optional(),
+    cache_used: z.boolean().optional(),
+    fallback_reason: z.string().optional(),
     source: z.string().optional(),
     sql_or_retrieval_path: z.string().optional(),
     raw_sql_sot: z.string().optional(),
@@ -750,7 +866,16 @@ server.tool(
     title: z.string().optional(),
     question: z.string().optional(),
     summary: z.string().min(1),
-    answer_state: z.enum(["answered", "clarification_needed", "needs_analyst_review", "refused"]).optional(),
+    answer_state: z.enum(["answered", "clarification_needed", "needs_analyst_review", "source_mismatch", "refused"]).optional(),
+    route_id: z.string().optional(),
+    investigation_id: z.string().optional(),
+    duration_ms: z.number().nonnegative().optional(),
+    context_items_loaded: z.number().int().nonnegative().optional(),
+    estimated_context_tokens: z.number().int().nonnegative().optional(),
+    source_reads: z.number().int().nonnegative().optional(),
+    model_class: z.string().optional(),
+    cache_used: z.boolean().optional(),
+    fallback_reason: z.string().optional(),
     source: z.string().optional(),
     metric_id: z.string().optional(),
     evidence_checked: z.array(z.string()).optional(),
@@ -798,7 +923,16 @@ server.tool(
     owner: z.string().optional(),
     source: z.string().optional(),
     metric_id: z.string().optional(),
-    answer_state: z.enum(["answered", "clarification_needed", "needs_analyst_review", "refused"]).optional(),
+    answer_state: z.enum(["answered", "clarification_needed", "needs_analyst_review", "source_mismatch", "refused"]).optional(),
+    route_id: z.string().optional(),
+    investigation_id: z.string().optional(),
+    duration_ms: z.number().nonnegative().optional(),
+    context_items_loaded: z.number().int().nonnegative().optional(),
+    estimated_context_tokens: z.number().int().nonnegative().optional(),
+    source_reads: z.number().int().nonnegative().optional(),
+    model_class: z.string().optional(),
+    cache_used: z.boolean().optional(),
+    fallback_reason: z.string().optional(),
     evidence_checked: z.array(z.string()).optional(),
     raw_sql_sot: z.string().optional(),
     verified_dashboard_sot: z.string().optional(),
@@ -926,7 +1060,16 @@ function sessionContextProofInput(input: {
   title?: string;
   question?: string;
   summary: string;
-  answer_state?: "answered" | "clarification_needed" | "needs_analyst_review" | "refused";
+  answer_state?: "answered" | "clarification_needed" | "needs_analyst_review" | "source_mismatch" | "refused";
+  route_id?: string;
+  investigation_id?: string;
+  duration_ms?: number;
+  context_items_loaded?: number;
+  estimated_context_tokens?: number;
+  source_reads?: number;
+  model_class?: string;
+  cache_used?: boolean;
+  fallback_reason?: string;
   source?: string;
   metric_id?: string;
   evidence_checked?: string[];
@@ -980,6 +1123,15 @@ function sessionContextProofInput(input: {
     freshness: input.freshness,
     business_context_check: input.business_context_check,
     uncertainty: input.uncertainty,
+    route_id: input.route_id,
+    investigation_id: input.investigation_id,
+    duration_ms: input.duration_ms,
+    context_items_loaded: input.context_items_loaded,
+    estimated_context_tokens: input.estimated_context_tokens,
+    source_reads: input.source_reads,
+    model_class: input.model_class,
+    cache_used: input.cache_used,
+    fallback_reason: input.fallback_reason,
     current_frame: input.current_frame,
     anchors: input.anchors,
     disconfirming_evidence: input.disconfirming_evidence,

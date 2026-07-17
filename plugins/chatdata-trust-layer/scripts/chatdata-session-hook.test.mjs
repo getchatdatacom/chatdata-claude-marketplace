@@ -34,7 +34,18 @@ function parseHookOutput(stdout) {
   assert.equal(output.hookSpecificOutput.hookEventName, "UserPromptSubmit");
   assert.match(output.systemMessage, /business metric request/i);
   assert.match(output.systemMessage, /ChatData before direct source tools/i);
-  assert.match(output.systemMessage, /write back proof/i);
+  assert.match(output.systemMessage, /chatdata_prepare_metric_answer/i);
+  assert.match(output.systemMessage, /submit reviewed outcome feedback/i);
+}
+
+{
+  const output = parseHookOutput(runHook({
+    hook_event_name: "PostToolUse",
+    tool_name: "chatdata_prepare_metric_answer"
+  }));
+
+  assert.equal(output.hookSpecificOutput.hookEventName, "PostToolUse");
+  assert.match(output.systemMessage, /ChatData context was just read/i);
 }
 
 {
