@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- bumped the plugin manifest to `0.3.21` after production QA; metric preflight now treats source hints and stale context as blocking gates and names freshness in the required output
 - bumped the plugin manifest to `0.3.20` and added `/chatdata:prepare-metric-answer`, fail-closed route planning before direct source reads, route-bound proof, reviewed answer feedback, and the shared Trust Harness scorecard tools
 - fixed the Claude status line so remote MCP-only Claude setups are not shown as `mcp:missing` just because `~/.chatdata/config.json` is absent; the footer now detects the configured Claude `chatdata` MCP server and can refresh from `chatdata_doctor`
 - corrected `/chatdata:help` repair copy so Claude Code users get the full remote MCP plus plugin setup path instead of the terminal-config-only fallback

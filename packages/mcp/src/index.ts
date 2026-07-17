@@ -164,8 +164,6 @@ const localMcpWriteTools = [
   "chatdata_create_metric_card",
   "chatdata_save_answer_path",
   "chatdata_record_session_context",
-  "chatdata_import_source_context",
-  "chatdata_submit_answer_feedback",
   "chatdata_create_proof_receipt",
   "chatdata_share_context",
   "chatdata_diff_versions",
