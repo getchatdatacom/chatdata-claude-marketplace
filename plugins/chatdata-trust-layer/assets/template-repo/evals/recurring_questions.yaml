@@ -1,31 +1,256 @@
-questions:
-  - why did self-serve conversion drop last week?
-  - why did self serve conversion fall last week?
-  - what drove the self-serve conversion decline last week?
-  - is this movement real or a data issue?
-  - is the conversion drop real or a dashboard issue?
-  - is this a real decline or bad data?
-  - which market, channel, or device drove the change?
-  - which channel drove the change?
-  - which device drove the conversion decline?
-  - what changed on mobile paid search?
-  - what changed on paid search?
-  - show me the mobile paid search shift
-  - why did self-serve conversion drop in the current wbr?
-  - is this a measurement issue or a real drop?
-  - which segment drove the weekly conversion decline?
-  - what explains the conversion drop last week?
-  - is the movement real enough for the wbr?
-  - what shifted inside mobile paid search?
-  - why did qualified signup conversion fall last week?
-  - did a dashboard issue cause the conversion drop?
-  - which channel was the largest driver?
-  - what changed on the short-form signup path?
-  - why did seller funnel conversion drop last week?
-  - is the weekly movement real?
-  - which device mix changed the most?
-  - what changed in mobile paid search routing?
-  - why is conversion down week over week?
-  - could this be a data issue?
-  - which market segment drove the movement?
-  - what changed on mobile paid search last week?
+eval_schema_version: 2
+
+failure_layers:
+  - missing_asset
+  - retrieval_miss
+  - context_conflict
+  - application_error
+  - query_error
+  - source_data_error
+
+context_metrics:
+  - retrieval_recall
+  - context_precision
+  - application_rate
+  - answer_correctness_given_successful_retrieval
+
+ablation_metrics:
+  - correct_answer_rate_delta
+  - clarification_accuracy_delta
+  - quietly_wrong_rate_delta
+  - tokens_delta
+  - latency_delta
+  - source_calls_delta
+
+production_correctness_labels:
+  - online_correct
+  - quietly_wrong
+  - correct_clarification
+  - correct_review
+  - correct_refusal
+
+context_oracles:
+  conversion_drop:
+    expected_route_id: self-serve-conversion-drop
+    expected_metric_id: self_serve_conversion
+    required_filters:
+      - weekly business review period
+      - exclude test accounts
+      - exclude partner-assisted sessions
+    expected_caveats:
+      - campaign tagging changed during the same period
+      - traffic quality should be reviewed before calling this purely a product issue
+    validation_reference: weekly-dashboard-self-serve-conversion
+    accepted_answer_states: [verified]
+    required_context_ids:
+      - metrics/self_serve_conversion
+      - answer-paths/why-did-self-serve-conversion-drop
+      - artifacts/weekly-dashboard-self-serve-conversion
+      - queries/trusted/self_serve_conversion_wbr
+    eligible_context_ids:
+      - metrics/self_serve_conversion
+      - metrics/contracts
+      - answer-paths/why-did-self-serve-conversion-drop
+      - answer-paths/which-segment-drove-change
+      - answer-paths/is-this-movement-real-or-data-issue
+      - artifacts/weekly-dashboard-self-serve-conversion
+      - queries/trusted/self_serve_conversion_wbr
+      - sources/domain-reference-template
+    retrieved_context_ids: []
+    applied_context_ids: []
+    failure_layer: []
+    ablation_bundle_ids:
+      - governed_metric_packet
+      - reviewed_answer_path
+      - verified_dashboard_tieout
+      - supporting_domain_context
+    production_audit_sample_rate: 0.1
+    production_audit_risk_tier: wbr_operating
+
+  data_issue:
+    expected_route_id: movement-real-or-data-issue
+    expected_metric_id: self_serve_conversion
+    required_filters:
+      - weekly business review period
+      - exclude test accounts
+    expected_caveats:
+      - dashboard tie-out passes, but attribution confidence is softened by tagging drift
+    validation_reference: weekly-dashboard-self-serve-conversion
+    accepted_answer_states: [verified]
+    required_context_ids:
+      - metrics/self_serve_conversion
+      - answer-paths/is-this-movement-real-or-data-issue
+      - artifacts/weekly-dashboard-self-serve-conversion
+      - queries/trusted/self_serve_conversion_wbr
+    eligible_context_ids:
+      - metrics/self_serve_conversion
+      - answer-paths/is-this-movement-real-or-data-issue
+      - answer-paths/why-did-self-serve-conversion-drop
+      - artifacts/weekly-dashboard-self-serve-conversion
+      - artifacts/trusted_artifacts
+      - queries/trusted/self_serve_conversion_wbr
+    retrieved_context_ids: []
+    applied_context_ids: []
+    failure_layer: []
+    ablation_bundle_ids:
+      - governed_metric_packet
+      - reviewed_data_quality_answer_path
+      - verified_dashboard_tieout
+    production_audit_sample_rate: 0.1
+    production_audit_risk_tier: wbr_operating
+
+  segment_driver:
+    expected_route_id: segment-driver
+    expected_metric_id: self_serve_conversion
+    required_filters:
+      - weekly business review period
+      - exclude test accounts
+    expected_caveats:
+      - mobile paid search is the largest driver in the current synthetic export
+      - campaign tagging changed during the same period
+    validation_reference: weekly-dashboard-self-serve-conversion
+    accepted_answer_states: [verified, trusted]
+    required_context_ids:
+      - metrics/self_serve_conversion
+      - answer-paths/which-segment-drove-change
+      - artifacts/weekly-dashboard-self-serve-conversion
+      - queries/trusted/self_serve_conversion_wbr
+    eligible_context_ids:
+      - metrics/self_serve_conversion
+      - answer-paths/why-did-self-serve-conversion-drop
+      - answer-paths/which-segment-drove-change
+      - answer-paths/mobile-paid-search-follow-up
+      - artifacts/weekly-dashboard-self-serve-conversion
+      - queries/trusted/self_serve_conversion_wbr
+      - sources/domain-reference-template
+    retrieved_context_ids: []
+    applied_context_ids: []
+    failure_layer: []
+    ablation_bundle_ids:
+      - governed_metric_packet
+      - reviewed_segment_answer_path
+      - verified_dashboard_tieout
+    production_audit_sample_rate: 0.1
+    production_audit_risk_tier: wbr_operating
+
+  mobile_paid_search:
+    expected_route_id: mobile-paid-search-follow-up
+    expected_metric_id: self_serve_conversion
+    required_filters:
+      - weekly business review period
+      - mobile paid search
+    expected_caveats:
+      - this path starts exploratory because the follow-up cut depends on the current campaign routing snapshot
+    validation_reference: mobile-paid-search-benchmark-needed
+    accepted_answer_states: [draft, benchmarked, needs_review]
+    required_context_ids:
+      - metrics/self_serve_conversion
+      - answer-paths/mobile-paid-search-follow-up
+      - queries/generated/mobile_paid_search_mix
+    eligible_context_ids:
+      - metrics/self_serve_conversion
+      - answer-paths/mobile-paid-search-follow-up
+      - answer-paths/which-segment-drove-change
+      - queries/generated/mobile_paid_search_mix
+      - sources/domain-reference-template
+    retrieved_context_ids: []
+    applied_context_ids: []
+    failure_layer: []
+    ablation_bundle_ids:
+      - governed_metric_packet
+      - exploratory_answer_path
+      - supporting_domain_context
+    production_audit_sample_rate: 0.05
+    production_audit_risk_tier: exploratory_follow_up
+
+eval_cases:
+  - oracle_id: conversion_drop
+    eval_id: conversion-drop-001
+    canonical_question: why did self-serve conversion drop last week?
+  - oracle_id: conversion_drop
+    eval_id: conversion-drop-002
+    canonical_question: why did self serve conversion fall last week?
+  - oracle_id: conversion_drop
+    eval_id: conversion-drop-003
+    canonical_question: what drove the self-serve conversion decline last week?
+  - oracle_id: data_issue
+    eval_id: data-issue-001
+    canonical_question: is this movement real or a data issue?
+  - oracle_id: data_issue
+    eval_id: data-issue-002
+    canonical_question: is the conversion drop real or a dashboard issue?
+  - oracle_id: data_issue
+    eval_id: data-issue-003
+    canonical_question: is this a real decline or bad data?
+  - oracle_id: segment_driver
+    eval_id: segment-driver-001
+    canonical_question: which market, channel, or device drove the change?
+  - oracle_id: segment_driver
+    eval_id: segment-driver-002
+    canonical_question: which channel drove the change?
+  - oracle_id: segment_driver
+    eval_id: segment-driver-003
+    canonical_question: which device drove the conversion decline?
+  - oracle_id: mobile_paid_search
+    eval_id: mobile-paid-search-001
+    canonical_question: what changed on mobile paid search?
+  - oracle_id: mobile_paid_search
+    eval_id: mobile-paid-search-002
+    canonical_question: what changed on paid search?
+  - oracle_id: mobile_paid_search
+    eval_id: mobile-paid-search-003
+    canonical_question: show me the mobile paid search shift
+  - oracle_id: conversion_drop
+    eval_id: conversion-drop-004
+    canonical_question: why did self-serve conversion drop in the current wbr?
+  - oracle_id: data_issue
+    eval_id: data-issue-004
+    canonical_question: is this a measurement issue or a real drop?
+  - oracle_id: segment_driver
+    eval_id: segment-driver-004
+    canonical_question: which segment drove the weekly conversion decline?
+  - oracle_id: conversion_drop
+    eval_id: conversion-drop-005
+    canonical_question: what explains the conversion drop last week?
+  - oracle_id: data_issue
+    eval_id: data-issue-005
+    canonical_question: is the movement real enough for the wbr?
+  - oracle_id: mobile_paid_search
+    eval_id: mobile-paid-search-004
+    canonical_question: what shifted inside mobile paid search?
+  - oracle_id: conversion_drop
+    eval_id: conversion-drop-006
+    canonical_question: why did qualified signup conversion fall last week?
+  - oracle_id: data_issue
+    eval_id: data-issue-006
+    canonical_question: did a dashboard issue cause the conversion drop?
+  - oracle_id: segment_driver
+    eval_id: segment-driver-005
+    canonical_question: which channel was the largest driver?
+  - oracle_id: mobile_paid_search
+    eval_id: mobile-paid-search-005
+    canonical_question: what changed on the short-form signup path?
+  - oracle_id: conversion_drop
+    eval_id: conversion-drop-007
+    canonical_question: why did seller funnel conversion drop last week?
+  - oracle_id: data_issue
+    eval_id: data-issue-007
+    canonical_question: is the weekly movement real?
+  - oracle_id: segment_driver
+    eval_id: segment-driver-006
+    canonical_question: which device mix changed the most?
+  - oracle_id: mobile_paid_search
+    eval_id: mobile-paid-search-006
+    canonical_question: what changed in mobile paid search routing?
+  - oracle_id: conversion_drop
+    eval_id: conversion-drop-008
+    canonical_question: why is conversion down week over week?
+  - oracle_id: data_issue
+    eval_id: data-issue-008
+    canonical_question: could this be a data issue?
+  - oracle_id: segment_driver
+    eval_id: segment-driver-007
+    canonical_question: which market segment drove the movement?
+  - oracle_id: mobile_paid_search
+    eval_id: mobile-paid-search-007
+    canonical_question: what changed on mobile paid search last week?

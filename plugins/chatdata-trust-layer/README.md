@@ -52,8 +52,10 @@ Default loop:
 5. For any exploratory analytics question, apply the frame trail by default: decision, 3-4 grounded anchors, candidate frames, disconfirming evidence, alternate-frame test, committed frame or downgrade, tripwires, and action implications.
 6. Answer with a compact trust label and the evidence that actually matters.
 7. If the work created reusable business knowledge, run the smallest write tool: `chatdata_record_session_context`, `chatdata_create_metric_card`, `chatdata_save_answer_path`, `chatdata_create_proof_receipt`, or `chatdata_propose_patch`.
-8. Submit reviewed outcome feedback through `chatdata_submit_answer_feedback`, then run `chatdata_run_context_steward` and `chatdata_list_review_queue` after MCP writes.
-9. Run `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:but-for-real`, `/chatdata:audit-context`, or `/chatdata:proof` before calling the result trusted, ready, reusable, or fixed.
+8. During offline or ablation evals, record required, eligible, retrieved, and applied context through `chatdata_record_eval_observation`.
+9. When `production_audit.required` is true, grade the structured answer through `chatdata_record_production_audit`. High-impact routes always require an audit.
+10. Submit reviewed outcome feedback through `chatdata_submit_answer_feedback`, then run `chatdata_run_context_steward` and `chatdata_list_review_queue` after MCP writes.
+11. Run `/chatdata:validate`, `/chatdata:validation-stack`, `/chatdata:but-for-real`, `/chatdata:audit-context`, or `/chatdata:proof` before calling the result trusted, ready, reusable, or fixed.
 
 This is how audit and sync stay coupled: audit proves the context can be trusted; sync saves new reusable context back into the hub. A successful investigation that does not sync its corrected definition, answer path, caveat, or proof receipt is incomplete.
 The user should not need to invoke `/chatdata:warehouse-query` to get this behavior. When ChatData is active and the user asks an analytics question, the default principal analyst harness routes through the same context, frame, validation, and proof gates.
@@ -251,6 +253,8 @@ Typical outputs:
 - reviewed context publishing
 - drift and review-readiness checks
 - skeptical second-pass proof before a trust-layer change is marked complete
+
+The bundled 30-case eval fixture now carries a context oracle for every question. Each published case includes required, eligible, retrieved, and applied context ids plus a failure layer. Use `chatdata_record_eval_observation` to score the funnel and to record minimal, full, without-bundle, and with-bundle runs. Use `chatdata_record_production_audit` for sampled real answers; finance, board, customer-facing, and other high-impact routes require an audit.
 
 ## Verification Standard
 

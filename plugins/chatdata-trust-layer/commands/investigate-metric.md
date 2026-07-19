@@ -50,6 +50,7 @@ Preferred flow:
    - caveats
    - recommended next step
 12. Bind proof and any reusable answer path to the returned `route_id` and `investigation_id`. Submit reviewed outcome feedback through `chatdata_submit_answer_feedback`; negative feedback creates review work and never edits approved context automatically.
+13. During eval runs, record the retrieval funnel with `chatdata_record_eval_observation`. When the prepared route requires a production audit, grade the structured answer with `chatdata_record_production_audit`.
 
 Required output:
 

@@ -365,6 +365,45 @@ def build_eval_questions(evals_path: Path) -> list[dict]:
         return []
 
     payload = load_yaml(evals_path) or {}
+    context_oracles = payload.get("context_oracles", {})
+    eval_cases = payload.get("eval_cases", [])
+    if isinstance(eval_cases, list) and eval_cases:
+        results = []
+        for index, case in enumerate(eval_cases, start=1):
+            if not isinstance(case, dict):
+                continue
+            oracle_id = str(case.get("oracle_id") or "").strip()
+            oracle = context_oracles.get(oracle_id, {}) if isinstance(context_oracles, dict) else {}
+            if not isinstance(oracle, dict):
+                oracle = {}
+            case = {**oracle, **case}
+            question = str(case.get("canonical_question") or case.get("question") or "").strip()
+            if not question:
+                continue
+            results.append(
+                {
+                    "evalId": str(case.get("eval_id") or f"generated-eval-{index:02d}"),
+                    "contextOracleId": oracle_id or None,
+                    "canonicalQuestion": question,
+                    "expectedRouteId": str(case.get("expected_route_id") or guess_route_id(question)),
+                    "expectedMetricId": str(case.get("expected_metric_id") or "self_serve_conversion"),
+                    "requiredFilters": case.get("required_filters", []),
+                    "expectedCaveats": case.get("expected_caveats", []),
+                    "validationReference": str(case.get("validation_reference") or ""),
+                    "acceptedAnswerStates": case.get("accepted_answer_states", ["verified"]),
+                    "requiredContextIds": case.get("required_context_ids", []),
+                    "eligibleContextIds": case.get("eligible_context_ids", []),
+                    "retrievedContextIds": case.get("retrieved_context_ids", []),
+                    "appliedContextIds": case.get("applied_context_ids", []),
+                    "conflictingContextIds": case.get("conflicting_context_ids", []),
+                    "failureLayer": case.get("failure_layer", []),
+                    "ablationBundleIds": case.get("ablation_bundle_ids", []),
+                    "productionAuditSampleRate": case.get("production_audit_sample_rate"),
+                    "productionAuditRiskTier": case.get("production_audit_risk_tier"),
+                }
+            )
+        return results
+
     questions = payload.get("questions", [])
     results = []
     for index, question in enumerate(questions, start=1):

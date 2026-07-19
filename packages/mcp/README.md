@@ -201,6 +201,9 @@ Available tools:
 - `chatdata_prepare_metric_answer(input)`
 - `chatdata_import_source_context(input)`
 - `chatdata_submit_answer_feedback(input)`
+- `chatdata_record_eval_observation(input)`
+- `chatdata_record_production_audit(input)`
+  - Set `matching_offline_cohort` to the matching full-run `eval_id` so the scorecard can report offline-to-production drift.
 - `chatdata_get_trust_scorecard()`
 - `chatdata_propose_patch(path, base_hash, new_markdown, purpose)`
 - `chatdata_list_review_queue()`
@@ -241,9 +244,13 @@ Codex does not have `/chatdata:` plugin commands, so the MCP flow should make th
 2. For a business-metric request, call `chatdata_prepare_metric_answer` with the exact question and expected workspace domain.
 3. Confirm `plan_only: true` and `source_executed: false`. Stop on `clarification_needed`, `needs_analyst_review`, `source_mismatch`, or `refused`.
 4. Query the live source only after an `answered` route allows it, then run validation in dependency order.
-5. Bind proof and any reusable path to the route id, then submit reviewed outcome feedback.
-6. Record proof with `chatdata_create_proof_receipt` before calling a result trusted or reusable.
-7. Save a recurring answer path only when owner, route, validation, caveats, uncertainty state, and reuse rule are explicit.
+5. For an offline or ablation eval, call `chatdata_record_eval_observation` with the required, eligible, retrieved, and applied context ids. Keep model, temperature, tool permissions, and source snapshot fixed across variants.
+6. Bind proof and any reusable path to the route id, then submit reviewed outcome feedback.
+7. When the route's `production_audit.required` flag is true, grade the structured answer with `chatdata_record_production_audit`. Novel quietly-wrong failures become review-gated eval proposals.
+8. Record proof with `chatdata_create_proof_receipt` before calling a result trusted or reusable.
+9. Save a recurring answer path only when owner, route, validation, caveats, uncertainty state, and reuse rule are explicit.
+
+The trust scorecard reports retrieval recall, context precision, context application rate, leave-one-bundle-out utility, and sampled production correctness with a 95% Wilson interval. These measures stay separate from route reliability and feedback coverage.
 
 Reliability failures include quietly wrong answers, missing answer state, unsupported numeric confidence, source mismatches, missing caveats, missing uncertainty interval, and claims that imply the agent checked a source it could not access.
 

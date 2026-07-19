@@ -115,7 +115,8 @@ const metricPromptReminder = [
   "Route through ChatData before direct source tools: run chatdata_doctor if needed, then call chatdata_prepare_metric_answer with the exact question and expected workspace domain.",
   "Confirm plan_only is true and source_executed is false. Only query PostHog, warehouse, BI, spreadsheet, or file tools when the route returns answered.",
   "Stop on clarification_needed, needs_analyst_review, source_mismatch, or refused; do not query around the block.",
-  "Bind reusable proof to the route_id and investigation_id, then submit reviewed outcome feedback with chatdata_submit_answer_feedback."
+  "Bind reusable proof to the route_id and investigation_id, then submit reviewed outcome feedback with chatdata_submit_answer_feedback.",
+  "During evals, record required, eligible, retrieved, and applied context with chatdata_record_eval_observation. If production_audit.required is true, grade the structured answer with chatdata_record_production_audit."
 ].join(" ");
 
 const postSourceReadReminder = [

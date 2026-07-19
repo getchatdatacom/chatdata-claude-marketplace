@@ -13,6 +13,7 @@ Use this before querying PostHog, warehouse, BI, spreadsheet, or file tools for 
 5. If the route returns `clarification_needed`, `needs_analyst_review`, `source_mismatch`, or `refused`, stop and follow its repair path. Stale approved context and unresolved source hints are blocking conditions.
 6. After the source read, run validation in dependency order and create a proof receipt bound to the returned `route_id` and `investigation_id`.
 7. For recurring reviewed work, save the answer path. Submit reviewed feedback with `chatdata_submit_answer_feedback`.
+8. For eval runs, call `chatdata_record_eval_observation`. If the route requires a production audit, call `chatdata_record_production_audit` after an owner or independent method grades the structured answer.
 
 Required output:
 
@@ -23,4 +24,5 @@ Required output:
 - validation plan
 - model recommendation, never an automatic model switch
 - explicit note that the planner did not execute the source
+- production audit requirement and stratum
 - next action

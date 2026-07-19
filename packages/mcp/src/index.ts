@@ -156,6 +156,8 @@ const localMcpWriteTools = [
   "chatdata_activate",
   "chatdata_import_source_context",
   "chatdata_submit_answer_feedback",
+  "chatdata_record_eval_observation",
+  "chatdata_record_production_audit",
   "chatdata_grant_consent",
   "chatdata_revoke_consent",
   "chatdata_propose_patch",
@@ -172,6 +174,8 @@ const localMcpWriteTools = [
 ];
 const localMcpRequiredWriteTools = [
   "chatdata_record_session_context",
+  "chatdata_record_eval_observation",
+  "chatdata_record_production_audit",
   "chatdata_create_metric_card",
   "chatdata_save_answer_path",
   "chatdata_create_proof_receipt",
@@ -264,6 +268,7 @@ server.tool(
     success_criteria: z.string().optional(),
     investigation_id: z.string().optional(),
     risk_tier: z.enum(["routine", "high"]).optional(),
+    decision_surface: z.enum(["internal", "finance", "board", "customer_facing", "high_impact"]).optional(),
     context_limit: z.number().int().min(1).max(5).optional(),
     unresolved_correction_ids: z.array(z.string()).optional(),
     structural_validation: z.enum(["not_run", "passed", "failed"]).optional(),
@@ -334,7 +339,79 @@ server.tool(
   }
 );
 
-server.tool("chatdata_get_trust_scorecard", "Read the route release gate and seven-day production trust signals.", {}, async () => {
+server.tool(
+  "chatdata_record_eval_observation",
+  "Record an offline or ablation eval run with eligible, retrieved, and applied context ids; ChatData computes the retrieval funnel and failure layer.",
+  {
+    eval_id: z.string().min(1),
+    route_id: z.string().optional(),
+    run_variant: z.enum(["minimal", "full", "without_bundle", "with_bundle"]),
+    bundle_id: z.string().optional(),
+    repeat_index: z.number().int().min(1).optional(),
+    required_context_ids: z.array(z.string()),
+    eligible_context_ids: z.array(z.string()),
+    retrieved_context_ids: z.array(z.string()),
+    applied_context_ids: z.array(z.string()),
+    conflicting_context_ids: z.array(z.string()).optional(),
+    failure_layer: z.array(z.enum(["missing_asset", "retrieval_miss", "context_conflict", "application_error", "query_error", "source_data_error"])).optional(),
+    answer_correct: z.boolean().optional(),
+    answer_state: z.string().optional(),
+    answer_state_correct: z.boolean().optional(),
+    clarification_correct: z.boolean().optional(),
+    quietly_wrong: z.boolean().optional(),
+    tokens: z.number().int().min(0).optional(),
+    latency_ms: z.number().int().min(0).optional(),
+    source_calls: z.number().int().min(0).optional(),
+    model_class: z.string().optional(),
+    source_snapshot: z.string().optional(),
+    temperature: z.number().optional(),
+    tool_permissions: z.array(z.string()).optional()
+  },
+  async (input) => {
+    const config = await requireConfig();
+    return text(await hubFetchOrQueue(config, "/context/eval-observation", {
+      method: "POST",
+      body: JSON.stringify(input)
+    }, {
+      tool: "chatdata_record_eval_observation",
+      path: "/context/eval-observation",
+      method: "POST",
+      body: input
+    }));
+  }
+);
+
+server.tool(
+  "chatdata_record_production_audit",
+  "Grade one sampled production route and preserve novel quietly-wrong failures as review-gated eval proposals.",
+  {
+    route_id: z.string().min(1),
+    audit_label: z.enum(["online_correct", "quietly_wrong", "correct_clarification", "correct_review", "correct_refusal"]),
+    domain: z.string().optional(),
+    risk_tier: z.string().optional(),
+    decision_surface: z.string().optional(),
+    saved_path_used: z.boolean().optional(),
+    answer_path_id: z.string().optional(),
+    matching_offline_cohort: z.string().optional(),
+    reviewer_method: z.string().optional(),
+    novel_failure: z.boolean().optional(),
+    grading_evidence: z.array(z.string()).optional()
+  },
+  async (input) => {
+    const config = await requireConfig();
+    return text(await hubFetchOrQueue(config, "/context/production-audit", {
+      method: "POST",
+      body: JSON.stringify(input)
+    }, {
+      tool: "chatdata_record_production_audit",
+      path: "/context/production-audit",
+      method: "POST",
+      body: input
+    }));
+  }
+);
+
+server.tool("chatdata_get_trust_scorecard", "Read route reliability, retrieval-oracle metrics, context ablations, and confidence-bounded production correctness.", {}, async () => {
   const config = await requireConfig();
   return text(await hubFetch(config, "/context/trust-scorecard"));
 });

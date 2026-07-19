@@ -59,7 +59,7 @@ const guidanceRecords: GuidanceRecord[] = [
     kind: "template",
     title: "Metric Packet Template",
     description: "Owner-reviewed Open Semantic Interchange core metric fields for count, rate, amount, and status metrics.",
-    version: "2026-06-25",
+    version: "2026-07-19",
     recommended_when: [
       "Creating or repairing an approved metric card",
       "Converting loose KPI language into an owner-reviewed metric packet"
@@ -225,6 +225,8 @@ Enforced route:
 5. Query the live source only when the route returns answered, then run validation in dependency order.
 6. Bind the proof receipt and any reusable answer path to the route_id and investigation_id.
 7. Submit reviewed outcome feedback with chatdata_submit_answer_feedback. Negative feedback creates review work and never changes approved context automatically.
+8. During offline or ablation evals, call chatdata_record_eval_observation with required, eligible, retrieved, and applied context ids. Keep the source snapshot, model, temperature, and tool permissions fixed across variants.
+9. If production_audit.required is true, grade the structured production answer with chatdata_record_production_audit. Audit every finance, board, customer-facing, or other high-impact answer. Novel quietly-wrong failures become review-gated eval proposals.
 
 The Claude Code plugin is required for Claude Code customers and can wrap this route with commands and hooks, but the rule belongs in MCP so Codex and other MCP-only clients inherit it.`
   },
@@ -233,7 +235,7 @@ The Claude Code plugin is required for Claude Code customers and can wrap this r
     kind: "rule",
     title: "Reliability Contract",
     description: "Gate for answer-state correctness, evidence paths, proof receipts, and reusable answer paths.",
-    version: "2026-06-17",
+    version: "2026-07-19",
     recommended_when: [
       "Before calling an answer trusted, reliable, reusable, or ready",
       "When a Cursor or Codex MCP-only client needs the same reliability bar as the Claude plugin"
@@ -260,6 +262,8 @@ Required before trust:
 - For numeric answers, include a confidence interval, validation interval, or explicit not available uncertainty state.
 - For exploratory answers, include decision, grounded anchors, disconfirming evidence, alternate frames, tripwires, and action implications.
 - Record proof with chatdata_create_proof_receipt before calling the result trusted or reusable.
+- Record the context retrieval funnel with chatdata_record_eval_observation during golden and ablation runs.
+- Record sampled production correctness with chatdata_record_production_audit when the prepared route requires it.
 
 Reliability failures:
 

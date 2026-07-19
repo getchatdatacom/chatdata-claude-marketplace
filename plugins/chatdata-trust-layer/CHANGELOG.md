@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- bumped the plugin manifest to `0.3.22`; all 30 eval cases now publish with context oracles, and hosted/local MCP can record retrieval funnels, context ablations, and confidence-bounded production audits
 - bumped the plugin manifest to `0.3.21` after production QA; metric preflight now treats source hints and stale context as blocking gates and names freshness in the required output
 - bumped the plugin manifest to `0.3.20` and added `/chatdata:prepare-metric-answer`, fail-closed route planning before direct source reads, route-bound proof, reviewed answer feedback, and the shared Trust Harness scorecard tools
 - fixed the Claude status line so remote MCP-only Claude setups are not shown as `mcp:missing` just because `~/.chatdata/config.json` is absent; the footer now detects the configured Claude `chatdata` MCP server and can refresh from `chatdata_doctor`
